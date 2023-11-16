@@ -33,7 +33,7 @@ let logo = figlet.textSync('STFIL CMD HUB', {
 program
     .name('stfil-cmd-hub')
     .description(logo + '\nSTFIL Contract Execution Tool')
-    .version('1.0.7')
+    .version('1.0.8')
 
 const passwordRegex = /^[A-Za-z0-9!@#$%^&*(),.?":{}|<>]{8,20}$/;
 

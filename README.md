@@ -19,7 +19,7 @@ stfil -h
 ## Usage
 
 ```sh
-npm i stfil-cmd-hub -g
+npm i @stfil/stfil-cmd-hub -g
 ```
 ### Check for successful installation
 ```sh
