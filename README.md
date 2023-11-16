@@ -17,9 +17,12 @@ npm install
 ```sh
 npm i stfil-cmd-hub -g
 ```
+### Check for successful installation
 ```sh
 stfil -h
 ```
+
+![img.png](img.png)
 
 ### Initialization environment
 ```sh
