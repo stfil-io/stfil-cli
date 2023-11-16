@@ -3,7 +3,7 @@ const {encrypt, SK} = require("./src/utils/common");
 
 const {Command, Option} = require('commander');
 const figlet = require('figlet');
-const {select, input, password} = require('@inquirer/prompts');
+const {select, password} = require('@inquirer/prompts');
 const program = new Command();
 const i18n = require('./src/i18n/i18n-config');
 const {withdrawLoan} = require("./src/service");
@@ -21,6 +21,7 @@ const {getConfig} = require("./src/init");
 const {isInit} = require("./src/init");
 const {initConfig, init} = require("./src/init");
 const packageJson = require('./package.json');
+const {isPassword} = require("./src/init");
 const {exec} = require('child_process');
 
 init()
@@ -34,6 +35,18 @@ program
     .description(logo + '\nSTFIL Contract Execution Tool')
     .version('0.0.1')
 
+const passwordRegex = /^[A-Za-z0-9!@#$%^&*(),.?":{}|<>]{8,20}$/;
+
+async function checkIsPassword() {
+    let isP = isPassword()
+    let encryptionKey
+    if (isP) {
+        encryptionKey = await password({
+            message: i18n.__('Enter-encryption-password'),
+        })
+    }
+    return encryptionKey
+}
 
 program.command('init')
     .description(i18n.__('Initializer-Configuration'))
@@ -57,6 +70,30 @@ program.command('init')
             ],
         })
 
+        let isPassword = await select({
+            message: i18n.__('Whether-the-wallet-private'),
+            choices: [
+                {name: 'Yes', value: true,},
+                {name: 'No', value: false},
+            ],
+        })
+        let encryptionKey = null
+        if (isPassword) {
+            let isValid = false
+            while (!isValid) {
+                encryptionKey = await password({
+                    message: i18n.__('Enter-password-tip'),
+                    mask: '*',
+                })
+                isValid = passwordRegex.test(encryptionKey);
+                if (!isValid) {
+                    console.log(i18n.__('Enter-password-tip-2'))
+                } else {
+                    break
+                }
+            }
+        }
+
         let privateKey = await password({
             message: i18n.__("input-privateKey"),
             mask: '*',
@@ -65,7 +102,8 @@ program.command('init')
         let config = {
             language,
             env,
-            privateKey: privateKey ? encrypt(privateKey, SK) : null
+            isPassword,
+            privateKey: privateKey ? encrypt(privateKey, isPassword ? encryptionKey : SK) : null
         }
 
         initConfig(config, !!options.force)
@@ -105,11 +143,10 @@ const walletCommand = program
 
 walletCommand
     .command("info")
-    .option("-pk, --privateKey <string>", i18n.__('Set-Wallet-PrivateKey'))
-    .addOption(new Option("-n, --net <string>", i18n.__('Set-Network')).choices(['Main', 'Calibration']))
     .description(i18n.__('Get-Wallet-Info'))
-    .action((options) => {
-        walletInfo(options.privateKey, options.net)
+    .action(async (options) => {
+        let encryptionKey = await checkIsPassword()
+        walletInfo(encryptionKey)
     })
 
 const spCommand = program
@@ -197,9 +234,10 @@ poolCommand.command('sealLoan <poolAddress> <nodeId> <amount>')
         checkAddress(poolAddress)
         checkNodeId(nodeId)
         checkNumber(amount)
+        let encryptionKey = await checkIsPassword()
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === '1' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL`,
             () => {
-                sealLoan(poolAddress, nodeId, amount, options.rateMode)
+                sealLoan(poolAddress, nodeId, amount, options.rateMode, encryptionKey)
             }, options.force)
     })
 
@@ -211,10 +249,10 @@ poolCommand.command('withdrawLoan <poolAddress> <nodeId> <amount>')
         checkAddress(poolAddress)
         checkNodeId(nodeId)
         checkNumber(amount)
-
+        let encryptionKey = await checkIsPassword()
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Withdrawal-Type')}: ${options.rateMode.toString() === '1' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Withdrawal-Amount')}: ${amount} FIL`,
             () => {
-                withdrawLoan(poolAddress, nodeId, amount, options.rateMode)
+                withdrawLoan(poolAddress, nodeId, amount, options.rateMode, encryptionKey)
             }, options.force)
     })
 
@@ -226,9 +264,10 @@ poolCommand.command('repay <poolAddress> <nodeId> <amount>')
         checkAddress(poolAddress)
         checkNodeId(nodeId)
         checkNumber(amount)
+        let encryptionKey = await checkIsPassword()
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === '1' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
             () => {
-                repay(poolAddress, nodeId, amount, options.rateMode)
+                repay(poolAddress, nodeId, amount, options.rateMode, encryptionKey)
             }, options.force)
     })
 
@@ -239,10 +278,11 @@ poolCommand.command('withdraw <poolAddress> <nodeId> <amount>')
         checkAddress(poolAddress)
         checkNodeId(nodeId)
         checkNumber(amount)
+        let encryptionKey = await checkIsPassword()
 
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('withdraw-Amount')}: ${amount} FIL`,
             () => {
-                withdraw(poolAddress, nodeId, amount)
+                withdraw(poolAddress, nodeId, amount, encryptionKey)
             }, options.force)
     })
 
@@ -254,9 +294,10 @@ spCommand.command('sealLoan <nodeId> <amount>')
     .action(async (nodeId, amount, options) => {
         checkNodeId(nodeId)
         checkNumber(amount)
+        let encryptionKey = await checkIsPassword()
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === '1' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL`,
             () => {
-                sealLoan(null, nodeId, amount, options.rateMode)
+                sealLoan(null, nodeId, amount, options.rateMode, encryptionKey)
             }, options.force)
     })
 
@@ -267,9 +308,10 @@ spCommand.command('repay <nodeId> <amount>')
     .action(async (nodeId, amount, options) => {
         checkNodeId(nodeId)
         checkNumber(amount)
+        let encryptionKey = await checkIsPassword()
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === '1' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
             () => {
-                repay(null, nodeId, amount, options.rateMode)
+                repay(null, nodeId, amount, options.rateMode, encryptionKey)
             }, options.force)
     })
 
@@ -279,9 +321,11 @@ spCommand.command('withdraw <nodeId> <amount>')
     .action(async (nodeId, amount, options) => {
         checkNodeId(nodeId)
         checkNumber(amount)
+        let encryptionKey = await checkIsPassword()
+
         confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('withdraw-Amount')}: ${amount} FIL`,
             () => {
-                withdraw(null, nodeId, amount)
+                withdraw(null, nodeId, amount, encryptionKey)
             }, options.force)
     })
 

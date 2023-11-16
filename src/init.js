@@ -44,12 +44,21 @@ function isInit() {
     return fs.existsSync(configFilePath)
 }
 
-function getPrivateKey() {
+function getPrivateKey(encryptionKey) {
     let config = getConfig()
     if (!config['privateKey']) {
         throw new ConfigNotFind()
     }
-    return decrypt(config['privateKey'], SK)
+
+    try {
+        if (!encryptionKey) {
+            return decrypt(config['privateKey'], SK)
+        }
+        return decrypt(config['privateKey'], encryptionKey)
+    } catch (e) {
+        console.error('Error: 私钥加密密码错误！')
+        process.exit(1);
+    }
 }
 
 function getConfig() {
@@ -60,6 +69,11 @@ function getConfig() {
         throw new ConfigNotFind()
     }
     return INNER_CONFIG
+}
+
+function isPassword() {
+    let config = getConfig()
+    return config['isPassword']
 }
 
 function _env(env) {
@@ -116,5 +130,6 @@ module.exports = {
     getRpc,
     getSTFILTokenContractAddress,
     getContractAddress,
-    getLang
+    getLang,
+    isPassword
 }

@@ -68,5 +68,8 @@
 	"repay-Amount": "还款数量",
 	"Enforcement-inquiries": "强制执行，不执行询问",
 	"Max-Borrowable-Liquidity-Amount": "剩余可借款流动性金额",
-	"\"Max-Borrowable-Liquidity-Amount": "\"Max-Borrowable-Liquidity-Amount"
+	"Whether-the-wallet-private": "是否加密保存钱包私钥（每次交易要求输入密码）",
+	"Enter-password-tip": "输入密码(8-20位)",
+	"Enter-password-tip-2": "请输入正确的密码（8-20位）,由字母，数字，或 !@#$%^&*(),.? 组成",
+	"Enter-encryption-password ": "输入私钥加密密码"
 }

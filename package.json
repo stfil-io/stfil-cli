@@ -1,6 +1,6 @@
 {
   "name": "stfil-cmd-hub",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "STFIL Contract Execution Tool",
   "main": "index.js",
   "scripts": {},

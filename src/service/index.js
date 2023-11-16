@@ -23,21 +23,20 @@ const ErrCodeCH = require('../utils/ErrCodeCH')
 const {shortToLong} = require("../utils/Price");
 const i18n = require('../i18n/i18n-config');
 const CLI = require('clui'), Spinner = CLI.Spinner;
+const {getProvider} = require("../contract/operation");
 
 let countdown = new Spinner('Loading...', ['◜', '◠', '◝', '◞', '◡', '◟']);
 
-async function walletInfo(privateKey, net) {
-    if (!privateKey) {
-        privateKey = getPrivateKey()
-    }
-    let rpc = getRpc(net)
+async function walletInfo(encryptionKey) {
+    let privateKey = getPrivateKey(encryptionKey)
+    let rpc = getRpc()
     let wallet = getWallet(privateKey, rpc);
     let address = await wallet.getAddress();
     let balance = await wallet.provider.getBalance(address)
-    let contract = getContract(wallet, getSTFILTokenContractAddress(net), STFILToken.abi);
+    let contract = getContract(wallet, getSTFILTokenContractAddress(), STFILToken.abi);
     let stfilBalance = await contract.balanceOf(address)
 
-    console.log("net:", net ? net : getEnv())
+    console.log("net:", getEnv())
     console.log('address:', address)
     console.log(`balance: ${longToShort(balance)} FIL`)
     console.log(`STFIL balance: ${longToShort(stfilBalance)} stFIL`)
@@ -46,18 +45,18 @@ async function walletInfo(privateKey, net) {
 async function nodeInfo(nodeId) {
 
     let rpc = getRpc()
-    let provider = getFilecoinProvider(rpc);
-    let stateReadState = await provider.readState(nodeId)
+    let filecoinProvider = getFilecoinProvider(rpc);
+    let stateReadState = await filecoinProvider.readState(nodeId)
     let {Balance} = stateReadState
     let {LockedFunds, InitialPledge} = stateReadState.State
     let Available = BigInt(Balance) - BigInt(LockedFunds) - BigInt(InitialPledge)
 
     let stakingPoolContractAddress = getContractAddress(null, "stakingPool")
 
-    let wallet = getWallet(getPrivateKey(), rpc);
-    let variableDebtTokenContract = getContract(wallet, getContractAddress(null, "VariableDebtToken"), VariableDebtToken.abi);
-    let stableDebtTokenContract = getContract(wallet, getContractAddress(null, "StableDebtToken"), StableDebtToken.abi);
-    let stakingPoolContract = getContract(wallet, stakingPoolContractAddress, StakingPool.abi);
+    let provider = getProvider(rpc)
+    let variableDebtTokenContract = getContract(provider, getContractAddress(null, "VariableDebtToken"), VariableDebtToken.abi);
+    let stableDebtTokenContract = getContract(provider, getContractAddress(null, "StableDebtToken"), StableDebtToken.abi);
+    let stakingPoolContract = getContract(provider, stakingPoolContractAddress, StakingPool.abi);
 
     let actorAddress = getActorAddress(nodeId)
     let variableDebtBalance = await variableDebtTokenContract.balanceOf(actorAddress)
@@ -73,7 +72,7 @@ async function nodeInfo(nodeId) {
 
     let maxBorrowableLiquidityAmount = await stakingPoolContract.maxBorrowableLiquidityAmount()
 
-    let poolStFilBalance = await wallet.provider.getBalance(stakingPoolContractAddress)
+    let poolStFilBalance = await provider.getBalance(stakingPoolContractAddress)
 
     let availableBorrowingAmount = PercentageMath.mul(Equity, maxLeverage - 10000n) - Debt
     if (availableBorrowingAmount > poolStFilBalance) {
@@ -120,16 +119,22 @@ function parseError(e) {
     console.error(`Error: ${msg}`)
 }
 
-function _stakingPoolContract() {
+function getWalletAddress(privateKey) {
     let rpc = getRpc()
-    let wallet = getWallet(getPrivateKey(), rpc);
+    let wallet = getWallet(privateKey, rpc)
+    return wallet.getAddress()
+}
+
+function _stakingPoolContract(encryptionKey) {
+    let rpc = getRpc()
+    let wallet = getWallet(getPrivateKey(encryptionKey), rpc);
     let stakingPoolContractAddress = getContractAddress(null, "stakingPool")
     return getContract(wallet, stakingPoolContractAddress, StakingPool.abi);
 }
 
-function getPoolContract(poolAddress) {
+function _getPoolContract(poolAddress, encryptionKey) {
     let rpc = getRpc()
-    let wallet = getWallet(getPrivateKey(), rpc);
+    let wallet = getWallet(getPrivateKey(encryptionKey), rpc);
     return getContract(wallet, poolAddress, StorageProviderLendingPool.abi);
 }
 
@@ -141,14 +146,14 @@ async function waitTx(tx) {
     console.log(`${i18n.__('Transaction-Successes')}!`)
 }
 
-async function sealLoan(poolAddress, nodeId, amount, rateMode) {
+async function sealLoan(poolAddress, nodeId, amount, rateMode, encryptionKey) {
 
     try {
         let tx
         if (!poolAddress) {
-            tx = await _stakingPoolContract().borrow(nodeId.substr(2), shortToLong(amount), rateMode)
+            tx = await _stakingPoolContract(encryptionKey).borrow(nodeId.substr(2), shortToLong(amount), rateMode)
         } else {
-            tx = await getPoolContract(poolAddress).sealLoan(nodeId.substr(2), shortToLong(amount), rateMode)
+            tx = await _getPoolContract(poolAddress, encryptionKey).sealLoan(nodeId.substr(2), shortToLong(amount), rateMode)
         }
         await waitTx(tx)
     } catch (e) {
@@ -158,9 +163,9 @@ async function sealLoan(poolAddress, nodeId, amount, rateMode) {
 
 }
 
-async function withdrawLoan(poolAddress, nodeId, amount, rateMode) {
+async function withdrawLoan(poolAddress, nodeId, amount, rateMode, encryptionKey) {
 
-    let poolContract = getPoolContract(poolAddress);
+    let poolContract = _getPoolContract(poolAddress, encryptionKey);
 
     try {
         let tx = await poolContract.withdrawLoan(nodeId.substr(2), shortToLong(amount), rateMode)
@@ -172,12 +177,12 @@ async function withdrawLoan(poolAddress, nodeId, amount, rateMode) {
 
 }
 
-async function repay(poolAddress, nodeId, amount, rateMode) {
+async function repay(poolAddress, nodeId, amount, rateMode, encryptionKey) {
     let contract
     if (!poolAddress) {
-        contract = _stakingPoolContract()
+        contract = _stakingPoolContract(encryptionKey)
     } else {
-        contract = getPoolContract(poolAddress)
+        contract = _getPoolContract(poolAddress, encryptionKey)
     }
 
     try {
@@ -189,14 +194,14 @@ async function repay(poolAddress, nodeId, amount, rateMode) {
 
 }
 
-async function withdraw(poolAddress, nodeId, amount) {
+async function withdraw(poolAddress, nodeId, amount, encryptionKey) {
 
     try {
         let tx
         if (poolAddress) {
-            tx = await getPoolContract(poolAddress).withdrawProfits(nodeId.substr(2), shortToLong(amount))
+            tx = await _getPoolContract(poolAddress, encryptionKey).withdrawProfits(nodeId.substr(2), shortToLong(amount))
         } else {
-            tx = await _stakingPoolContract().withdraw(nodeId.substr(2), shortToLong(amount))
+            tx = await _stakingPoolContract(encryptionKey).withdraw(nodeId.substr(2), shortToLong(amount))
         }
         await waitTx(tx)
     } catch (e) {
@@ -207,7 +212,9 @@ async function withdraw(poolAddress, nodeId, amount) {
 
 async function poolInfo(poolAddress) {
 
-    let poolContract = getPoolContract(poolAddress);
+    let rpc = getRpc()
+    let provider = getProvider(rpc)
+    let poolContract = getContract(provider, poolAddress, StorageProviderLendingPool.abi);
     let admin = await poolContract.owner()
     let nodeCount = await poolContract.nodeCount()
     let classifyDebt = await poolContract.totalClassifyDebt()
@@ -232,7 +239,11 @@ async function poolInfo(poolAddress) {
 async function poolNodeInfo(poolAddress, nodeId) {
 
     let actorId = nodeId.toString().substr(2)
-    let poolContract = getPoolContract(poolAddress);
+
+    let rpc = getRpc()
+    let provider = getProvider(rpc)
+    let poolContract = getContract(provider, poolAddress, StorageProviderLendingPool.abi);
+
     let classifyDebt = await poolContract.classifyDebt(actorId)
     let variableDebtBalance = classifyDebt[1]
     let stableDebtBalance = classifyDebt[0]
@@ -243,7 +254,9 @@ async function poolNodeInfo(poolAddress, nodeId) {
     let entity = await poolContract.entity(actorId)
     let maxSealedLoadAmount = await poolContract.maxSealedLoadAmount()
 
-    let stakingPoolContract = _stakingPoolContract()
+    let stakingPoolContractAddress = getContractAddress(null, "stakingPool")
+    let stakingPoolContract = getContract(provider, stakingPoolContractAddress, StakingPool.abi);
+
     let maxBorrowableLiquidityAmount = await stakingPoolContract.maxBorrowableLiquidityAmount()
     if (maxWithdrawLoanAmount > maxBorrowableLiquidityAmount) {
         maxWithdrawLoanAmount = maxBorrowableLiquidityAmount
@@ -252,9 +265,8 @@ async function poolNodeInfo(poolAddress, nodeId) {
         maxSealedLoadAmount = maxBorrowableLiquidityAmount
     }
 
-    let rpc = getRpc()
-    let provider = getFilecoinProvider(rpc);
-    let stateReadState = await provider.readState(nodeId)
+    let filecoinProvider = getFilecoinProvider(rpc);
+    let stateReadState = await filecoinProvider.readState(nodeId)
     let {Balance} = stateReadState
     let {LockedFunds, InitialPledge} = stateReadState.State
     let Available = BigInt(Balance) - BigInt(LockedFunds) - BigInt(InitialPledge)
@@ -271,14 +283,25 @@ async function poolNodeInfo(poolAddress, nodeId) {
 }
 
 async function poolNodes(poolAddress) {
-
-    let poolContract = getPoolContract(poolAddress);
+    let rpc = getRpc()
+    let provider = getProvider(rpc)
+    let poolContract = getContract(provider, poolAddress, StorageProviderLendingPool.abi);
     let nodeCount = await poolContract.nodeCount()
     for (let i = 0; i < nodeCount; i++) {
         let nodeId = await poolContract.node(i)
         console.log(`${i + 1}: f0${nodeId}`)
     }
-
 }
 
-module.exports = {walletInfo, nodeInfo, sealLoan, repay, withdraw, poolNodes, poolInfo, poolNodeInfo, withdrawLoan}
+module.exports = {
+    walletInfo,
+    nodeInfo,
+    sealLoan,
+    repay,
+    withdraw,
+    poolNodes,
+    poolInfo,
+    poolNodeInfo,
+    withdrawLoan,
+    getWalletAddress
+}

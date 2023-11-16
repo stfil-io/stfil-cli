@@ -3,7 +3,8 @@ const {solidityPacked} = require("ethers");
 
 const SK = "bb5d11450c465da624df5c415e802092b9eddfe73b6708905f6e22ad1971639c"
 
-function encrypt(text, secretKey) {
+function encrypt(text, password) {
+    const secretKey = crypto.createHash('sha256').update(password).digest();
     const iv = crypto.randomBytes(16); // 生成随机初始化向量
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), iv);
     let encrypted = cipher.update(text);
@@ -11,7 +12,8 @@ function encrypt(text, secretKey) {
     return iv.toString('hex') + ':' + encrypted.toString('hex');
 }
 
-function decrypt(text, secretKey) {
+function decrypt(text, password) {
+    const secretKey = crypto.createHash('sha256').update(password).digest();
     let textParts = text.split(':');
     let iv = Buffer.from(textParts.shift(), 'hex');
     let encryptedText = Buffer.from(textParts.join(':'), 'hex');
@@ -50,4 +52,13 @@ let contractParseCode = (err) => {
     }
     return -1
 }
-module.exports = {encrypt, decrypt, SK, getActorAddress, contractParseCode};
+
+function stringToHex(str) {
+    let hex = '';
+    for (let i = 0; i < str.length; i++) {
+        hex += str.charCodeAt(i).toString(16);
+    }
+    return hex;
+}
+
+module.exports = {encrypt, decrypt, SK, getActorAddress, contractParseCode, stringToHex};

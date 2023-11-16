@@ -17,7 +17,6 @@ let getContract = (wallet, contractAddress, abi) => {
     return new Contract(contractAddress, abi, wallet)
 }
 
-
 let getFilecoinProvider = (gateway) => {
     const httpConnector = new HttpJsonRpcConnector({
         url: gateway
@@ -26,4 +25,4 @@ let getFilecoinProvider = (gateway) => {
     return new LotusWalletProvider(lotusClient);
 }
 
-module.exports = {getWallet, getContract, getFilecoinProvider}
+module.exports = {getWallet, getContract, getFilecoinProvider, getProvider}
