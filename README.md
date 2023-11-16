@@ -9,7 +9,11 @@
 ## Install
 
 ```sh
+https://github.com/stfil-io/stfil-cmd-hub.git
+cd stfil-cmd-hub
 npm install
+npm link
+stfil -h
 ```
 
 ## Usage
