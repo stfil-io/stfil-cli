@@ -73,5 +73,5 @@
   "Whether-the-wallet-private": "Whether the wallet private key is encrypted (password required for each transaction)",
   "Enter-password-tip": "Enter password (8-20 digits)",
   "Enter-password-tip-2": "Please enter the correct password (8-20 digits), consisting of letters, numbers, or !@#$%^&*(),.? )",
-  "Enter-encryption-password ": "Enter the private key encryption password "
+  "Enter-encryption-password": "Enter the private key encryption password "
 }
