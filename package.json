@@ -7,9 +7,9 @@
   "bin": {
     "stfil": "./stfil.js"
   },
-  "keywords": [],
-  "author": "stfio.io",
-  "license": "ISC",
+  "keywords": ["STFIL"],
+  "author": "STFIL <info@stfil.io>",
+  "license": "(Apache-2.0 AND MIT)",
   "dependencies": {
     "@inquirer/prompts": "^3.3.0",
     "clui": "^0.3.6",
