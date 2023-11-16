@@ -1,0 +1,23 @@
+{
+  "name": "stfil-cmd-hub",
+  "version": "1.0.6",
+  "description": "STFIL Contract Execution Tool",
+  "main": "index.js",
+  "scripts": {},
+  "bin": {
+    "stfil": "./stfil.js"
+  },
+  "keywords": [],
+  "author": "stfio.io",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/prompts": "^3.3.0",
+    "clui": "^0.3.6",
+    "commander": "^11.1.0",
+    "ethers": "^6.8.1",
+    "figlet": "^1.7.0",
+    "filecoin.js": "^0.0.5-alpha",
+    "fs-extra": "^11.1.1",
+    "i18n": "^0.15.1"
+  }
+}

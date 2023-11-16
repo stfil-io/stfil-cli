@@ -1,0 +1,28 @@
+{
+  "version": "1.0.6",
+  "language": "en",
+  "env": "Main",
+  "privateKey": null,
+  "contract": {
+    "Calibration": {
+      "stakingPool": "0xcCa6294F0F3Ec381D0c1feAd22989C485E32854C",
+      "STFILToken": "0x6dE5b348540D27Fc6f8493De57b4157c45fa5755",
+      "StableDebtToken": "0x84b3b89E3fc473637c209dC6edd91cc20560C9e0",
+      "VariableDebtToken": "0xF35bD27021bF5f6B5E9a58d066660C7Dca3D2978",
+      "InterestRateStrategy": "0xb8E05D609F9a1fc7A3Fd9471420D0cf2e845D843",
+      "StorageProviderLendingPoolFactory": "0x48a1C8C45F960d750d558233166Abe71D08f4F94"
+    },
+    "Main": {
+      "stakingPool": "0xC8E4EF1148D11F8C557f677eE3C73901CD796Bf6",
+      "STFILToken": "0x3C3501E6c353DbaEDDFA90376975Ce7aCe4Ac7a8",
+      "StableDebtToken": "0xF440700552A59415d3D14Cf9382C48C86cda8F31",
+      "VariableDebtToken": "0x0B24190702018C93E09A55F958D6485Ae31b62A1",
+      "InterestRateStrategy": "0x44c3958165366e9026b796b6300b1E2D27B8e219",
+      "StorageProviderLendingPoolFactory": "0x3600014960a5Ae4CC340e8e3D58372e03128179F"
+    }
+  },
+  "gateway": {
+    "Main": "https://api.node.glif.io/",
+    "Calibration": "https://api.calibration.node.glif.io/"
+  }
+}
