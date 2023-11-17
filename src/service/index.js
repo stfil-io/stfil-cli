@@ -34,7 +34,11 @@ async function walletInfo(encryptionKey) {
     let address = await wallet.getAddress();
     let balance = await wallet.provider.getBalance(address)
     let contract = getContract(wallet, getSTFILTokenContractAddress(), STFILToken.abi);
-    let stfilBalance = await contract.balanceOf(address)
+    let stfilBalance = 0n
+    try {
+        stfilBalance = await contract.balanceOf(address)
+    } catch (e) {
+    }
 
     console.log("net:", getEnv())
     console.log('address:', address)
