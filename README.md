@@ -1,4 +1,4 @@
-# Welcome to stfil-cmd-hub 👋
+# Welcome to stfil-cli 👋
 ![Version](https://img.shields.io/badge/version-1.1.1-blue.svg?cacheSeconds=2592000)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -9,8 +9,8 @@
 ## Install
 
 ```sh
-https://github.com/stfil-io/stfil-cmd-hub.git
-cd stfil-cmd-hub
+https://github.com/stfil-io/stfil-cli.git
+cd stfil-cli
 npm install
 npm link
 stfil -h
@@ -19,7 +19,7 @@ stfil -h
 ## Usage
 
 ```sh
-npm i @stfil/stfil-cmd-hub -g
+npm i @stfil/stfil-cli -g
 ```
 ### Check for successful installation
 ```sh

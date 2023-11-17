@@ -31,7 +31,7 @@ let logo = figlet.textSync('STFIL CMD HUB', {
 })
 
 program
-    .name('stfil-cmd-hub')
+    .name('stfil-cli')
     .description(logo + '\nSTFIL Contract Execution Tool')
     .version('1.1.1')
 
