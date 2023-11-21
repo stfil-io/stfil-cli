@@ -8,4 +8,4 @@ RUN npm install
 
 RUN npm link
 
-CMD ["stfil", "-h"]
+CMD ["stfil-cli", "-h"]
