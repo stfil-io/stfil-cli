@@ -44,7 +44,7 @@ const {exec} = require('child_process');
 init()
 
 let logo = figlet.textSync('STFIL CLI', {
-    font: 'big',
+    font: 'Big',
 })
 
 program
