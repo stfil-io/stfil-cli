@@ -8,4 +8,4 @@ RUN npm install
 
 RUN npm link
 
-CMD ["stfil-cli", "autoAction", "--init" ]
+CMD ["stfil-cli", "splp", "node", "autoAction", "--init" ]
