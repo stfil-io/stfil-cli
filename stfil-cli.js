@@ -65,101 +65,104 @@ async function checkWalletIsPassword(address) {
     return encryptionKey
 }
 
-program.command('init')
-    .description(i18n.__('Initializer-Configuration'))
-    .option('-f, --force', i18n.__('Init-Config-With-Default'))
-    .action(async (options) => {
-        console.log(logo)
-        let language = await select({
-            message: i18n.__("select-language"),
-            choices: [
-                {name: '中文', value: 'zh',},
-                {name: 'English', value: 'en'},
-            ],
-        })
+async function _init(options, isNeedAdd = false) {
+    console.log(logo)
+    let language = await select({
+        message: i18n.__("select-language"),
+        choices: [
+            {name: '中文', value: 'zh',},
+            {name: 'English', value: 'en'},
+        ],
+    })
 
-        i18n.setLocale(language);
-        let env = await select({
-            message: i18n.__("select-net"),
-            choices: [
-                {name: 'Main', value: 'Main',},
-                {name: 'Calibration', value: 'Calibration'},
-            ],
-        })
+    i18n.setLocale(language);
+    let env = await select({
+        message: i18n.__("select-net"),
+        choices: [
+            {name: 'Main', value: 'Main',},
+            {name: 'Calibration', value: 'Calibration'},
+        ],
+    })
 
-        let walletInfos = []
-        let splp = []
-        let config = {
-            language,
-            env,
-            wallet: walletInfos,
+    let walletInfos = []
+    let splp = []
+    let config = {
+        language,
+        env,
+        wallet: walletInfos,
+    }
+    config[env] = {
+        pool: {
+            splp
         }
-        config[env] = {
-            pool: {
-                splp
-            }
-        }
+    }
 
-        initConfig(config, !!options.force)
-
-        let isAddWallet = await select({
+    initConfig(config, !!options.force)
+    let isAddWallet = true
+    if (!isNeedAdd) {
+        isAddWallet = await select({
             message: "是否现在添加钱包和借贷池",
             choices: [
                 {name: 'Yes', value: true,},
                 {name: 'No', value: false},
             ],
         })
+    }
 
-        let privateKey
-        let address
-        if (isAddWallet) {
+    let privateKey
+    let address
+    if (isAddWallet) {
 
-            let isPassword = await select({
-                message: i18n.__('Whether-the-wallet-private'),
-                choices: [
-                    {name: 'Yes', value: true,},
-                    {name: 'No', value: false},
-                ],
-            })
-            let encryptionKey = null
-            if (isPassword) {
-                let isValid = false
-                while (!isValid) {
-                    encryptionKey = await password({
-                        message: i18n.__('Enter-password-tip'),
-                        mask: '*',
-                    })
-                    isValid = passwordRegex.test(encryptionKey);
-                    if (!isValid) {
-                        console.log(i18n.__('Enter-password-tip-2'))
-                    } else {
-                        break
-                    }
-                }
-            }
-
-            while (true) {
-                privateKey = await password({
-                    message: i18n.__("input-privateKey"),
+        let isPassword = await select({
+            message: i18n.__('Whether-the-wallet-private'),
+            choices: [
+                {name: 'Yes', value: true,},
+                {name: 'No', value: false},
+            ],
+        })
+        let encryptionKey = null
+        if (isPassword) {
+            let isValid = false
+            while (!isValid) {
+                encryptionKey = await password({
+                    message: i18n.__('Enter-password-tip'),
                     mask: '*',
                 })
-                try {
-                    address = await getWalletAddress(privateKey)
+                isValid = passwordRegex.test(encryptionKey);
+                if (!isValid) {
+                    console.log(i18n.__('Enter-password-tip-2'))
+                } else {
                     break
-                } catch (e) {
-                    console.error('Error: 请输入正确的私钥', e)
                 }
             }
-
-            walletInfos.push({
-                address,
-                isPassword,
-                privateKey: privateKey ? encrypt(privateKey, isPassword ? encryptionKey : SK) : null
-            })
         }
-        let isAddLendingPool = false
 
-        if (isAddWallet) {
+        while (true) {
+            privateKey = await password({
+                message: i18n.__("input-privateKey"),
+                mask: '*',
+            })
+            try {
+                address = await getWalletAddress(privateKey)
+                break
+            } catch (e) {
+                console.error('Error: 请输入正确的私钥', e)
+            }
+        }
+
+        walletInfos.push({
+            address,
+            isPassword,
+            privateKey: privateKey ? encrypt(privateKey, isPassword ? encryptionKey : SK) : null
+        })
+    }
+    let isAddLendingPool = false
+
+    if (isAddWallet) {
+
+        if (isNeedAdd) {
+            isAddLendingPool = true
+        } else {
             isAddLendingPool = await select({
                 message: "是否现在添加借贷池",
                 choices: [
@@ -169,43 +172,52 @@ program.command('init')
             })
         }
 
-        let lendingPoolAddress
-        let poolAdmin
-        if (isAddLendingPool && isAddWallet) {
-            while (true) {
-                lendingPoolAddress = await input({
-                    message: `请输入借贷池地址`,
-                    validate: (address) => {
-                        return isAddress(address)
-                    }
-                })
-                try {
-                    poolAdmin = await getPoolAdmin(lendingPoolAddress, env)
-                    if (poolAdmin.toString().toLowerCase() !== address.toString().toLowerCase()) {
-                        console.error(`Error: 该借贷池的管理员不是你的钱包地址`)
-                    } else {
-                        break
-                    }
-                } catch (e) {
-                    console.error('Error: 请输入正确的地址')
+    }
+
+    let lendingPoolAddress
+    let poolAdmin
+    if (isAddLendingPool && isAddWallet) {
+        while (true) {
+            lendingPoolAddress = await input({
+                message: `请输入借贷池地址`,
+                validate: (address) => {
+                    return isAddress(address)
                 }
-            }
-
-            splp.push({
-                address: lendingPoolAddress,
-                admin: poolAdmin,
-                default: true
             })
-        }
-
-        config['wallet'] = walletInfos
-        config[env] = {
-            pool: {
-                splp
+            try {
+                poolAdmin = await getPoolAdmin(lendingPoolAddress, env)
+                if (poolAdmin.toString().toLowerCase() !== address.toString().toLowerCase()) {
+                    console.error(`Error: 该借贷池的管理员不是你的钱包地址`)
+                } else {
+                    break
+                }
+            } catch (e) {
+                console.error('Error: 请输入正确的地址')
             }
         }
 
-        console.log(`${i18n.__("config-created")} "${initConfig(config, !!options.force)}"`)
+        splp.push({
+            address: lendingPoolAddress,
+            admin: poolAdmin,
+            default: true
+        })
+    }
+
+    config['wallet'] = walletInfos
+    config[env] = {
+        pool: {
+            splp
+        }
+    }
+    console.log(`${i18n.__("config-created")} "${initConfig(config, !!options.force)}"`)
+    init()
+}
+
+program.command('init')
+    .description(i18n.__('Initializer-Configuration'))
+    .option('-f, --force', i18n.__('Init-Config-With-Default'))
+    .action(async (options) => {
+        await _init(options)
     })
 
 const configCommand = program
@@ -392,8 +404,11 @@ walletCommand
 
 const splpCommand = program.command('splp')
     .description(i18n.__('Lending-Pool'))
-    .hook('preAction', () => {
-        initCheck()
+    .hook('preAction', (thisCommand, actionCommand) => {
+        let action = actionCommand.name()
+        if (action !== "autoSealLoad" && action !== "autoRepay") {
+            initCheck()
+        }
     })
 
 function checkNodeId(nodeId) {
@@ -629,8 +644,18 @@ nodeCommand.command('autoSealLoad <nodeId>')
     .addOption(new Option("-a,--amount <amount>", "数量"))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
+    .option("--init", "未执行init则执行初始化操作")
     .description('定时自动借款封装，每分钟执行一次，当可用余额小于<available-lt>时，执行借款<amount>')
     .action(async (nodeId, options) => {
+
+        if (options.init) {
+            if (!isInit()) {
+                await _init(options, true)
+            }
+        } else {
+            initCheck()
+        }
+
         checkNodeId(nodeId)
         let amount = options.amount
         checkNumber(amount)
@@ -648,9 +673,19 @@ nodeCommand.command('autoRepay <nodeId>')
     .requiredOption("-agt,--available-gt <amount>", "当可用余额大于于当前值时，执行还款")
     .addOption(new Option("-a,--amount <amount>", "数量"))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
+    .option("--init", "未执行init则执行初始化操作")
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
     .description('定时自动还款，每分钟执行一次，当可用余额大于<available-gt>时，执行还款<amount>')
     .action(async (nodeId, options) => {
+
+        if (options.init) {
+            if (!isInit()) {
+                await _init(options, true)
+            }
+        } else {
+            initCheck()
+        }
+
         checkNodeId(nodeId)
         let amount = options.amount
         checkNumber(amount)
