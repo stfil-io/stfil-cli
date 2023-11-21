@@ -406,7 +406,7 @@ const splpCommand = program.command('splp')
     .description(i18n.__('Lending-Pool'))
     .hook('preAction', (thisCommand, actionCommand) => {
         let action = actionCommand.name()
-        if (action !== "autoSealLoad" && action !== "autoRepay") {
+        if (action !== "autoSealLoad" && action !== "autoRepay" && action !== "autoAction") {
             initCheck()
         }
     })
@@ -696,6 +696,87 @@ nodeCommand.command('autoRepay <nodeId>')
             () => {
                 autoRepay(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey, options.availableGt)
             }, options.force)
+    })
+
+nodeCommand.command('autoAction')
+    .option("--init", "未执行init则执行初始化操作")
+    .action(async (options) => {
+
+        if (options.init) {
+            if (!isInit()) {
+                await _init(options, true)
+            }
+        } else {
+            initCheck()
+        }
+
+        let action = await select({
+            message: `请选择您要的操作`,
+            choices: [
+                {
+                    name: `autoSealLoad`,
+                    value: 'autoSealLoad'
+                },
+                {
+                    name: `autoRepay`,
+                    value: 'autoRepay'
+                }
+            ]
+        })
+
+        let nodeId = await input({
+            message: `请输入节点ID`,
+            validate: (_nodeId) => {
+                return _nodeId.startsWith('f0')
+            }
+        })
+
+        let rateMode = await select({
+            message: `请选择${action === 'autoSealLoad' ? '借款' : '还款'}利率模式`,
+            choices: [
+                {
+                    name: `浮动利率`,
+                    value: "v"
+                },
+                {
+                    name: `稳定利率`,
+                    value: "r"
+                }
+            ]
+        })
+
+        let available = await input({
+            message: `请输入触发金额，当可用余额${action === 'autoSealLoad' ? '小于' : '大于'}该金额时触发`,
+            validate: (_amount) => {
+                return !isNaN(_amount)
+            }
+        })
+
+        let amount = await input({
+            message: `请输入${action === 'autoSealLoad' ? '借款' : '还款'}金额`,
+            validate: (_amount) => {
+                return !isNaN(_amount)
+            }
+        })
+
+        let {address, admin} = getPoolAddressByOptions(options, true)
+        let poolAddress = address
+        let encryptionKey = await checkWalletIsPassword(admin)
+
+        switch (action) {
+            case "autoRepay":
+                confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL\n触发借款条件: 可用余额大于${available} FIL`,
+                    () => {
+                        autoRepay(poolAddress, nodeId, amount, parseRateMode(rateMode), admin, encryptionKey, available)
+                    }, options.force)
+                break
+            case "autoSealLoad":
+                confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL\n触发借款条件: 可用余额小于${available} FIL`,
+                    () => {
+                        autoSealLoad(poolAddress, nodeId, amount, parseRateMode(rateMode), admin, encryptionKey, available)
+                    }, options.force)
+                break
+        }
     })
 
 program.command('update')
