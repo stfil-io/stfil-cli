@@ -1,6 +1,11 @@
 #!/bin/sh
 stfil-cli init
 
+if [ "$#" -ne 4 ]; then
+    echo "Error: four parameters are required"
+    exit 1
+fi
+
 action=$1
 nodeId=$2
 available=$3
