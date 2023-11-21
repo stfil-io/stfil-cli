@@ -1,49 +1,108 @@
-const {getSTFILTokenContractAddress} = require("../init");
+const {getActorAddress} = require("../utils/common");
 const {getContract} = require("../contract/operation");
-const {getEnv} = require("../init");
-const {longToShort} = require("../utils/Price");
-const {getRpc, getLang} = require("../init");
-const {getPrivateKey} = require("../init");
-const {getWallet} = require("../contract/operation");
+const {getProvider} = require("../contract/operation");
+const {getContractAddress} = require("../init");
+const {getRpc} = require("../init");
+const {getFilecoinProvider} = require("../contract/operation");
+const {initConfig} = require("../init");
+const {getConfigWallet} = require("../init");
+const {getConfigSplp} = require("../init");
+const {getConfigPool} = require("../init");
 const VariableDebtToken = require('../contract/abi/VariableDebtToken.json')
 const StableDebtToken = require('../contract/abi/StableDebtToken.json')
-const StorageProviderLendingPool = require('../contract/abi/StorageProviderLendingPool.json')
 const StakingPool = require('../contract/abi/StakingPool.json')
-const STFILToken = require('../contract/abi/STFILToken.json')
 const NodeConfiguration = require("../utils/NodeConfiguration");
 const PercentageMath = require("../utils/PercentageMath");
-const {contractParseCode} = require("../utils/common");
+const i18n = require("../i18n/i18n-config");
 const {wad} = require("../utils/Price");
 const {percent_wad} = require("../utils/Price");
-const {getActorAddress} = require("../utils/common");
-const {getContractAddress} = require("../init");
-const {getFilecoinProvider} = require("../contract/operation");
-const ErrCode = require('../utils/ErrCode')
-const ErrCodeCH = require('../utils/ErrCodeCH')
-const {shortToLong} = require("../utils/Price");
-const i18n = require('../i18n/i18n-config');
-const CLI = require('clui'), Spinner = CLI.Spinner;
-const {getProvider} = require("../contract/operation");
+const {longToShort} = require("../utils/Price");
+const StorageProviderLendingPool = require('../contract/abi/StorageProviderLendingPool.json')
+const {getEnv} = require("../init");
+const {getConfig} = require("../init");
 
-let countdown = new Spinner('Loading...', ['◜', '◠', '◝', '◞', '◡', '◟']);
+async function poolList() {
+    let pool = getConfigPool();
+    let poolType = Object.keys(pool);
+    let table = [];
+    for (let typeIndex in poolType) {
 
-async function walletInfo(encryptionKey) {
-    let privateKey = getPrivateKey(encryptionKey)
-    let rpc = getRpc()
-    let wallet = getWallet(privateKey, rpc);
-    let address = await wallet.getAddress();
-    let balance = await wallet.provider.getBalance(address)
-    let contract = getContract(wallet, getSTFILTokenContractAddress(), STFILToken.abi);
-    let stfilBalance = 0n
-    try {
-        stfilBalance = await contract.balanceOf(address)
-    } catch (e) {
+        let type = poolType[typeIndex]
+        for (let index in pool[type]) {
+            table.push({
+                "Type": type,
+                "ID": index,
+                "Address": pool[type][index]['address'],
+                "Admin": pool[type][index]['admin'],
+                "default": pool[type][index]['default']
+            })
+        }
     }
 
-    console.log("net:", getEnv())
-    console.log('address:', address)
-    console.log(`balance: ${longToShort(balance)} FIL`)
-    console.log(`STFIL balance: ${longToShort(stfilBalance)} stFIL`)
+    console.table(table)
+}
+
+async function setDefault(poolAddress) {
+    let splp = getConfigSplp()
+    let index = splp.findIndex(item => item['address'].toString().toLowerCase() === poolAddress.toString().toLowerCase())
+    if (index < 0) {
+        console.error(`Error: 该借贷池不存在`)
+        return
+    }
+
+    let defaultIndex = splp.findIndex(item => item['default'])
+    if (defaultIndex >= 0) {
+        splp[defaultIndex]['default'] = false
+    }
+
+    splp[index]['default'] = true
+
+    let config = getConfig()
+    config[getEnv()]['pool']['splp'] = splp
+    initConfig(config)
+}
+
+async function addPool(poolAddress) {
+
+    let splp = getConfigSplp()
+    if (splp.findIndex(item => item['address'].toString().toLowerCase() === poolAddress.toString().toLowerCase()) >= 0) {
+        console.error(`Error: 该借贷池已存在`)
+        return
+    }
+
+    let walletList = getConfigWallet();
+    let addressList = walletList.map(item => item['address'].toString().toLowerCase())
+    let poolAdmin = await getPoolAdmin(poolAddress)
+    if (addressList.indexOf(poolAdmin.toString().toLowerCase()) < 0) {
+        console.error(`Error: 该借贷池的管理员不存在你的钱包地址`)
+        return
+    }
+    splp.push({
+        "address": poolAddress,
+        "admin": poolAdmin,
+        "default": splp.length === 0
+    })
+
+    let config = getConfig()
+    config[getEnv()]['pool']["splp"] = splp
+
+    initConfig(config)
+}
+
+
+async function delPool(poolAddress) {
+
+    let splp = getConfigSplp()
+    let findIndex = splp.findIndex(item => item['address'].toString().toLowerCase() === poolAddress.toString().toLowerCase());
+    if (findIndex < 0) {
+        return
+    }
+
+    splp.splice(findIndex, 1)
+    let config = getConfig()
+    config[getEnv()]['pool']["splp"] = splp
+
+    initConfig(config)
 }
 
 async function nodeInfo(nodeId) {
@@ -108,114 +167,17 @@ async function nodeInfo(nodeId) {
 
 }
 
-function parseError(e) {
-    let code = contractParseCode(e)
-    let msg
-    let lang = getLang()
-    if (lang === 'zh') {
-        msg = ErrCodeCH[code]
-    } else {
-        msg = ErrCode[code]
-    }
-    if (!msg) {
-        throw e
-    }
-    console.error(`Error: ${msg}`)
-}
 
-function getWalletAddress(privateKey) {
-    let rpc = getRpc()
-    let wallet = getWallet(privateKey, rpc)
-    return wallet.getAddress()
-}
+async function getPoolAdmin(poolAddress, env) {
 
-function _stakingPoolContract(encryptionKey) {
-    let rpc = getRpc()
-    let wallet = getWallet(getPrivateKey(encryptionKey), rpc);
-    let stakingPoolContractAddress = getContractAddress(null, "stakingPool")
-    return getContract(wallet, stakingPoolContractAddress, StakingPool.abi);
-}
-
-function _getPoolContract(poolAddress, encryptionKey) {
-    let rpc = getRpc()
-    let wallet = getWallet(getPrivateKey(encryptionKey), rpc);
-    return getContract(wallet, poolAddress, StorageProviderLendingPool.abi);
-}
-
-async function waitTx(tx) {
-    console.log(`${i18n.__('Transaction-hash')}: ${tx.hash}`)
-    countdown.start();
-    await tx.wait();
-    countdown.stop()
-    console.log(`${i18n.__('Transaction-Successes')}!`)
-}
-
-async function sealLoan(poolAddress, nodeId, amount, rateMode, encryptionKey) {
-
-    try {
-        let tx
-        if (!poolAddress) {
-            tx = await _stakingPoolContract(encryptionKey).borrow(nodeId.substr(2), shortToLong(amount), rateMode)
-        } else {
-            tx = await _getPoolContract(poolAddress, encryptionKey).sealLoan(nodeId.substr(2), shortToLong(amount), rateMode)
-        }
-        await waitTx(tx)
-    } catch (e) {
-        countdown.stop()
-        parseError(e)
-    }
+    let rpc = getRpc(env)
+    let provider = getProvider(rpc)
+    let poolContract = getContract(provider, poolAddress, StorageProviderLendingPool.abi);
+    return await poolContract.owner()
 
 }
-
-async function withdrawLoan(poolAddress, nodeId, amount, rateMode, encryptionKey) {
-
-    let poolContract = _getPoolContract(poolAddress, encryptionKey);
-
-    try {
-        let tx = await poolContract.withdrawLoan(nodeId.substr(2), shortToLong(amount), rateMode)
-        await waitTx(tx)
-    } catch (e) {
-        countdown.stop()
-        parseError(e)
-    }
-
-}
-
-async function repay(poolAddress, nodeId, amount, rateMode, encryptionKey) {
-    let contract
-    if (!poolAddress) {
-        contract = _stakingPoolContract(encryptionKey)
-    } else {
-        contract = _getPoolContract(poolAddress, encryptionKey)
-    }
-
-    try {
-        let tx = await contract.repay(nodeId.substr(2), shortToLong(amount), rateMode)
-        await waitTx(tx)
-    } catch (e) {
-        parseError(e)
-    }
-
-}
-
-async function withdraw(poolAddress, nodeId, amount, encryptionKey) {
-
-    try {
-        let tx
-        if (poolAddress) {
-            tx = await _getPoolContract(poolAddress, encryptionKey).withdrawProfits(nodeId.substr(2), shortToLong(amount))
-        } else {
-            tx = await _stakingPoolContract(encryptionKey).withdraw(nodeId.substr(2), shortToLong(amount))
-        }
-        await waitTx(tx)
-    } catch (e) {
-        parseError(e)
-    }
-}
-
 
 async function poolInfo(poolAddress) {
-
     let rpc = getRpc()
     let provider = getProvider(rpc)
     let poolContract = getContract(provider, poolAddress, StorageProviderLendingPool.abi);
@@ -248,20 +210,33 @@ async function poolNodeInfo(poolAddress, nodeId) {
     let provider = getProvider(rpc)
     let poolContract = getContract(provider, poolAddress, StorageProviderLendingPool.abi);
 
-    let classifyDebt = await poolContract.classifyDebt(actorId)
-    let variableDebtBalance = classifyDebt[1]
-    let stableDebtBalance = classifyDebt[0]
-    let debt = variableDebtBalance + stableDebtBalance
-    let withdrawLoadAmount = await poolContract.withdrawLoadAmount(actorId)
-    let maxWithdrawLoanAmount = await poolContract.maxWithdrawLoanAmount(actorId)
-    let nodeOwner = await poolContract.nodeOwner(actorId)
-    let entity = await poolContract.entity(actorId)
-    let maxSealedLoadAmount = await poolContract.maxSealedLoadAmount()
+    let classifyDebtPromise = poolContract.classifyDebt(actorId)
+    let withdrawLoadAmountPromise = poolContract.withdrawLoadAmount(actorId)
+    let maxWithdrawLoanAmountPromise = poolContract.maxWithdrawLoanAmount(actorId)
+    let nodeOwnerPromise = poolContract.nodeOwner(actorId)
+    let entityPromise = poolContract.entity(actorId)
+    let maxSealedLoadAmountPromise = poolContract.maxSealedLoadAmount()
 
     let stakingPoolContractAddress = getContractAddress(null, "stakingPool")
     let stakingPoolContract = getContract(provider, stakingPoolContractAddress, StakingPool.abi);
 
-    let maxBorrowableLiquidityAmount = await stakingPoolContract.maxBorrowableLiquidityAmount()
+    let maxBorrowableLiquidityAmountPromise = stakingPoolContract.maxBorrowableLiquidityAmount()
+    let filecoinProvider = getFilecoinProvider(rpc);
+    let stateReadStatePromise = filecoinProvider.readState(nodeId)
+
+    let promiseAll = await Promise.all([classifyDebtPromise, withdrawLoadAmountPromise, maxWithdrawLoanAmountPromise, nodeOwnerPromise, entityPromise, maxSealedLoadAmountPromise, maxBorrowableLiquidityAmountPromise, stateReadStatePromise])
+
+    let classifyDebt = promiseAll[0]
+    let variableDebtBalance = classifyDebt[1]
+    let stableDebtBalance = classifyDebt[0]
+    let debt = variableDebtBalance + stableDebtBalance
+    let withdrawLoadAmount = promiseAll[1]
+    let maxWithdrawLoanAmount = promiseAll[2]
+    let nodeOwner = promiseAll[3]
+    let entity = promiseAll[4]
+    let maxSealedLoadAmount = promiseAll[5]
+
+    let maxBorrowableLiquidityAmount = promiseAll[6]
     if (maxWithdrawLoanAmount > maxBorrowableLiquidityAmount) {
         maxWithdrawLoanAmount = maxBorrowableLiquidityAmount
     }
@@ -269,8 +244,7 @@ async function poolNodeInfo(poolAddress, nodeId) {
         maxSealedLoadAmount = maxBorrowableLiquidityAmount
     }
 
-    let filecoinProvider = getFilecoinProvider(rpc);
-    let stateReadState = await filecoinProvider.readState(nodeId)
+    let stateReadState = promiseAll[7]
     let {Balance} = stateReadState
     let {LockedFunds, InitialPledge} = stateReadState.State
     let Available = BigInt(Balance) - BigInt(LockedFunds) - BigInt(InitialPledge)
@@ -298,14 +272,13 @@ async function poolNodes(poolAddress) {
 }
 
 module.exports = {
-    walletInfo,
     nodeInfo,
-    sealLoan,
-    repay,
-    withdraw,
+    poolList,
+    addPool,
+    delPool,
     poolNodes,
-    poolInfo,
     poolNodeInfo,
-    withdrawLoan,
-    getWalletAddress
+    poolInfo,
+    getPoolAdmin,
+    setDefault,
 }

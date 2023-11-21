@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {},
   "bin": {
-    "stfil-cli": "./stfil.js"
+    "stfil-cli": "./stfil-cli.js"
   },
   "homepage": "https://github.com/stfil-io/stfil-cli",
   "keywords": ["STFIL"],

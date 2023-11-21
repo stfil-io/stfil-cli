@@ -30,13 +30,25 @@ function initConfig(newConfig, isDefault) {
         fs.mkdirSync(CONFIG_ROOT_PATH, {recursive: true})
     }
     if (!fs.existsSync(configFilePath) || isDefault) {
+        if (newConfig['Main']) {
+            newConfig['Main'] = {...defaultConfig['Main'], ...newConfig['Main']}
+        }
+        if (newConfig['Calibration']) {
+            newConfig['Calibration'] = {...defaultConfig['Calibration'], ...newConfig['Calibration']}
+        }
         newConfig = {...defaultConfig, ...newConfig}
     } else {
         let _config = fsExtra.readJsonSync(configFilePath)
+        if (newConfig['Main']) {
+            newConfig['Main'] = {..._config['Main'], ...newConfig['Main']}
+        }
+        if (newConfig['Calibration']) {
+            newConfig['Calibration'] = {..._config['Calibration'], ...newConfig['Calibration']}
+        }
         newConfig = {..._config, ...newConfig}
     }
     fsExtra.writeJsonSync(configFilePath, newConfig, {spaces: 2})
-    console.log(`${i18n.__("config-created")} "${configFilePath}"`)
+    return configFilePath
 }
 
 
@@ -44,17 +56,13 @@ function isInit() {
     return fs.existsSync(configFilePath)
 }
 
-function getPrivateKey(encryptionKey) {
-    let config = getConfig()
-    if (!config['privateKey']) {
-        throw new ConfigNotFind()
-    }
-
+function getPrivateKey(walletAddress, encryptionKey) {
+    let wallet = getConfigWallet(walletAddress)
     try {
         if (!encryptionKey) {
-            return decrypt(config['privateKey'], SK)
+            return decrypt(wallet['privateKey'], SK)
         }
-        return decrypt(config['privateKey'], encryptionKey)
+        return decrypt(wallet['privateKey'], encryptionKey)
     } catch (e) {
         console.error('Error: 私钥加密密码错误！')
         process.exit(1);
@@ -71,9 +79,9 @@ function getConfig() {
     return INNER_CONFIG
 }
 
-function isPassword() {
-    let config = getConfig()
-    return config['isPassword']
+function isPassword(address) {
+    let wallet = getConfigWallet(address)
+    return wallet['isPassword']
 }
 
 function _env(env) {
@@ -86,7 +94,32 @@ function _env(env) {
 
 function getRpc(env) {
     let config = getConfig()
-    return config['gateway'][_env(env)]
+    return config[_env(env)]['gateway']
+}
+
+function getConfigWallet(address) {
+    let config = getConfig()
+    let walletList = config['wallet']
+    if (!address) {
+        return walletList
+    }
+    let findIndex = walletList.findIndex(item => item['address'].toString().toLowerCase() === address.toString().toLowerCase());
+    if (findIndex < 0) {
+        console.error(`Error: 钱包暂未添加，请手动添加钱包\nstfil-cli wallet add`)
+        process.exit(1)
+    }
+
+    return walletList[findIndex]
+}
+
+function getConfigPool() {
+    let config = getConfig()
+    return config[_env()]['pool']
+}
+
+function getConfigSplp() {
+    let pool = getConfigPool()
+    return pool['splp']
 }
 
 function getLang() {
@@ -96,17 +129,38 @@ function getLang() {
 
 function getSTFILTokenContractAddress(env) {
     let config = getConfig()
-    return config['contract'][(_env(env))]['STFILToken']
+    return config[(_env(env))]['contract']['STFILToken']
 }
 
 function getContractAddress(env, name) {
     let config = getConfig()
-    return config['contract'][(_env(env))][name]
+    return config[(_env(env))]['contract'][name]
 }
 
 function getEnv() {
     let config = getConfig()
     return config['env']
+}
+
+function getSplp(index) {
+    let splp = getConfigSplp()
+    if (index !== undefined) {
+        index = parseInt(index)
+        if (index >= splp.length) {
+            console.log(`Error: 借贷池序列号最大为${splp.length - 1}`)
+            process.exit(1)
+        }
+        return splp[index]
+    }
+    index = splp.findIndex(item => item['default'])
+    if (index < 0) {
+        if (splp.length === 0) {
+            console.error("Error: 请添加借贷池\n stfil-cli splp add")
+            process.exit(1)
+        }
+        return splp[0]
+    }
+    return splp[index]
 }
 
 function init() {
@@ -126,10 +180,14 @@ module.exports = {
     isInit,
     getPrivateKey,
     configFilePath,
-    getEnv,
     getRpc,
     getSTFILTokenContractAddress,
     getContractAddress,
     getLang,
-    isPassword
+    isPassword,
+    getConfigWallet,
+    getConfigPool,
+    getConfigSplp,
+    getSplp,
+    getEnv
 }

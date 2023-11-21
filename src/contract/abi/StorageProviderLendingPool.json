@@ -976,6 +976,30 @@
         },
         {
           "internalType": "uint256",
+          "name": "rateMode",
+          "type": "uint256"
+        }
+      ],
+      "name": "repayWithCash",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "actorId",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
         },
