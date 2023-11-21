@@ -8,4 +8,4 @@ RUN npm install
 
 RUN npm link
 
-CMD ["stfil-cli", "-h"]
+CMD ["sh", "./script/docker-start.sh"]

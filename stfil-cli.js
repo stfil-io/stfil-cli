@@ -645,7 +645,7 @@ nodeCommand.command('autoSealLoad <nodeId>')
 
 nodeCommand.command('autoRepay <nodeId>')
     .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .requiredOption("-alt,--available-gt <amount>", "当可用余额大于于当前值时，执行还款")
+    .requiredOption("-agt,--available-gt <amount>", "当可用余额大于于当前值时，执行还款")
     .addOption(new Option("-a,--amount <amount>", "数量"))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
