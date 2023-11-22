@@ -50,7 +50,7 @@ let logo = figlet.textSync('STFIL CLI', {
 program
     .name('stfil-cli')
     .description(logo + '\nSTFIL Contract Execution Tool')
-    .version('1.2.0')
+    .version(packageJson.version)
 
 const passwordRegex = /^[A-Za-z0-9!@#$%^&*(),.?":{}|<>]{8,20}$/;
 
