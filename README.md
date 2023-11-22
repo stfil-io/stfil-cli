@@ -6,22 +6,22 @@
 
 ### 🏠 [Homepage](https://stfil.io)
 
-## Install
+## Local Installation
 
 ```sh
 git clone https://github.com/stfil-io/stfil-cli.git
 cd stfil-cli
 npm install
 npm link
-stfil -h
+stfil-cli -h
 ```
 
-## Usage
+## Direct use
 
 ```sh
 npm i @stfil/stfil-cli -g
 ```
-### Check for successful installation
+## Check for successful installation
 ```sh
 stfil-cli -h
 ```
