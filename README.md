@@ -38,39 +38,94 @@ stfil-cli init
 2. Use the passphrase entered by the user to encrypt and save the private key, but then you need to enter an additional password every time you
 
 
+### Add Wallet
+```sh
+stfil-cli wallet add
+```
+### Wallet List
+```sh
+stfil-cli wallet list
+```
 ### Wallet details
 ```sh
 stfil-cli wallet info
 ```
 
-### Node details
+### Lending Pool add
 ```sh
-stfil-cli sp info f041385
+stfil-cli splp add 0xc5A520f9Ea2DB52805f570741B1E869E07f308d4
 ```
 
-### Storage provider loan
-Variable rate borrowing 10FIL
+### Lending Pool list
 ```sh
-stfil-cli sp sealLoan f041385 10
-```
-Stable rate borrowing 10FIL
-```sh
-stfil-cli sp sealLoan -r 1 f041385 10
+stfil-cli splp list
 ```
 
-### Pool details
+### Lending Pool info
 ```sh
-stfil-cli sp pool info 0xc5A520f9Ea2DB52805f570741B1E869E07f308d4
+stfil-cli splp info
+```
+
+### Node info
+```sh
+stfil-cli splp node info f041395
 ```
 
 ### Borrowing pool operation
 Variable rate borrowing 10FIL
 ```sh
-stfil-cli sp pool sealLoan 0xc5A520f9Ea2DB52805f570741B1E869E07f308d4 f041395 10
+stfil-cli splp node sealLoan -r v -a 10 f041395 
 ```
 Stable rate borrowing 10FIL
 ```sh
-stfil-cli sp pool sealLoan -r 1 0xc5A520f9Ea2DB52805f570741B1E869E07f308d4 f041395 10
+stfil-cli splp node sealLoan -r r -a 10 f041395 
+```
+
+### Timed automatic borrowing
+
+Checks every minute if the available balance in the wallet is less than the specified value, if so borrows
+
+Examples:
+When the available balance is less than 100, borrow 100
+
+```sh
+stfil-cli splp node autoSealLoad -alt 100 -a 100 f041395
+```
+
+### Timed automatic repayment
+
+Checks every minute if the available balance in the wallet is greater than the specified value, and if so, debits the
+Examples:
+Repayment of 100 when the available balance is greater than 100
+
+```sh
+stfil-cli splp node autoRepay -agt 100 -a 100 f041395
+```
+
+
+## Docker Install
+
+```sh
+git clone https://github.com/stfil-io/stfil-cli.git
+cd stfil-cli
+docker build -t stfil-cli .
+docker run -it stfil-cli
+```
+When running with docker, you need to complete the initialization operations
+
+When running with docker, you need to complete the initialization operation, and when the container is ready, exit the container command line using 
+```sh
+Ctrl + P followed by  Ctrl + Q
+```
+The container restart operation needs to be reparameterized, using the following command
+
+```sh
+docker start -i <CONTAINER ID>
+```
+
+Use this command to exit the container
+```sh
+Ctrl + P followed by  Ctrl + Q
 ```
 
 ## Author
