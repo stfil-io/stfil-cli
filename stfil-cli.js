@@ -101,7 +101,7 @@ async function _init(options, isNeedAdd = false) {
     let isAddWallet = true
     if (!isNeedAdd) {
         isAddWallet = await select({
-            message: "是否现在添加钱包和借贷池",
+            message: i18n.__('add-wallet-and-lending-pool'),
             choices: [
                 {name: 'Yes', value: true,},
                 {name: 'No', value: false},
@@ -146,7 +146,7 @@ async function _init(options, isNeedAdd = false) {
                 address = await getWalletAddress(privateKey)
                 break
             } catch (e) {
-                console.error('Error: 请输入正确的私钥', e)
+                console.error(`Error: ${i18n.__('enter-correct-private-key')}`, e)
             }
         }
 
@@ -164,7 +164,7 @@ async function _init(options, isNeedAdd = false) {
             isAddLendingPool = true
         } else {
             isAddLendingPool = await select({
-                message: "是否现在添加借贷池",
+                message: i18n.__('add-lending-pool-now'),
                 choices: [
                     {name: 'Yes', value: true,},
                     {name: 'No', value: false},
@@ -179,7 +179,7 @@ async function _init(options, isNeedAdd = false) {
     if (isAddLendingPool && isAddWallet) {
         while (true) {
             lendingPoolAddress = await input({
-                message: `请输入借贷池地址`,
+                message: i18n.__('enter-lending-pool-address'),
                 validate: (address) => {
                     return isAddress(address)
                 }
@@ -187,12 +187,12 @@ async function _init(options, isNeedAdd = false) {
             try {
                 poolAdmin = await getPoolAdmin(lendingPoolAddress, env)
                 if (poolAdmin.toString().toLowerCase() !== address.toString().toLowerCase()) {
-                    console.error(`Error: 该借贷池的管理员不是你的钱包地址`)
+                    console.error(`Error: ${i18n.__('lending-pool-admin-not-your-wallet')}`)
                 } else {
                     break
                 }
             } catch (e) {
-                console.error('Error: 请输入正确的地址')
+                console.error(`Error: ${i18n.__('enter-correct-address')}`)
             }
         }
 
@@ -236,17 +236,17 @@ function initCheck() {
 
 configCommand
     .command("get-env")
-    .description("获取当前网络环境")
+    .description(i18n.__('get-current-network'))
     .action(async () => {
         console.log(getEnv())
     });
 
 configCommand
     .command("set-env")
-    .description("设置当前网络环境")
+    .description(i18n.__('set-current-network'))
     .action(async () => {
         let env = await select({
-            message: "请选择网络",
+            message: i18n.__('select-network'),
             choices: [
                 {name: 'Main', value: 'Main',},
                 {name: 'Calibration', value: 'Calibration'},
@@ -290,7 +290,7 @@ walletCommand
 
 walletCommand
     .command("add")
-    .description("添加钱包")
+    .description(i18n.__('add-wallet'))
     .action(async () => {
         let isPassword = await select({
             message: i18n.__('Whether-the-wallet-private'),
@@ -327,7 +327,7 @@ walletCommand
                 address = await getWalletAddress(privateKey)
                 break
             } catch (e) {
-                console.error('Error: 请输入正确的私钥', e)
+                console.error(`Error: ${i18n.__('enter-correct-private-key')}`, e)
             }
         }
 
@@ -339,7 +339,7 @@ async function selectWallet(index) {
     if (index !== undefined) {
         index = parseInt(index)
         if (index >= walletList.length) {
-            console.log(`Error: 钱包序列号最大为${walletList.length - 1}`)
+            console.log(`Error: ${i18n.__('max-wallet-serial-number')}${walletList.length - 1}`)
             process.exit(1)
         }
         return walletList[index]['address']
@@ -353,7 +353,7 @@ async function selectWallet(index) {
     })
 
     return await select({
-        message: "选择钱包",
+        message: i18n.__('select-wallet'),
         choices,
     })
 }
@@ -372,15 +372,15 @@ async function selectSplpPoolList(selectIndex) {
     })
 
     return await select({
-        message: "选择借贷池",
+        message: i18n.__('select-lending-pool'),
         choices,
     })
 }
 
 walletCommand
     .command("del")
-    .option("-i,--index <index>", "本地钱包序列号")
-    .description("删除钱包")
+    .option("-i,--index <index>", i18n.__('local-wallet-serial-number'))
+    .description(i18n.__('delete-wallet'))
     .action(async (options) => {
         let selectAddress = await selectWallet(options.index)
         delWallet(selectAddress)
@@ -388,9 +388,9 @@ walletCommand
 
 walletCommand
     .command("info")
-    .option("-a,--address <address>", "任意钱包地址")
-    .option("-i,--index <index>", "本地钱包序列号")
-    .description("获取钱包信息")
+    .option("-a,--address <address>", i18n.__('any-wallet-address'))
+    .option("-i,--index <index>", i18n.__('local-wallet-serial-number'))
+    .description(i18n.__('Get-Wallet-Info'))
     .action(async (options) => {
         if (options.address) {
             checkAddress(options.address)
@@ -421,14 +421,14 @@ function checkNodeId(nodeId) {
 function checkNumber(amount) {
     if (isNaN(amount)) {
         console.error('error: option \'-a,--amount <amount>\' is required. Must be a number.');
-        process.exit(1); // 退出程序
+        process.exit(1);
     }
 }
 
 function checkAddress(address) {
     if (!isAddress(address)) {
         console.error('error: address is invalid.');
-        process.exit(1); // 退出程序
+        process.exit(1);
     }
 }
 
@@ -451,20 +451,20 @@ function confirmationOperation(message, okCall, force = false,) {
 }
 
 splpCommand.command('list')
-    .description("借贷池列表")
+    .description(i18n.__('lending-pool-list'))
     .action(() => {
         poolList()
     })
 
 splpCommand.command('add <poolAddress>')
-    .description("添加借贷池")
+    .description(i18n.__('add-lending-pool'))
     .action(async (poolAddress) => {
         checkAddress(poolAddress)
         addPool(poolAddress)
     })
 
 splpCommand.command('del <poolAddress>')
-    .description("删除借贷池")
+    .description(i18n.__('delete-lending-pool'))
     .action((poolAddress) => {
         delPool(poolAddress)
     })
@@ -476,7 +476,7 @@ function getPoolAddressByOptions(options, needLocal = false) {
             let splp = getConfigSplp()
             let index = splp.findIndex(item => item['address'].toString().toLowerCase() === options.address)
             if (index < 0) {
-                console.error('Error: 找不到该借贷池，请手动添加\nstfil-cli splp add')
+                console.error(`Error: ${i18n.__('lending-pool-not-found')}\nstfil-cli splp add`)
                 process.exit(1)
             }
             return splp[index]
@@ -491,9 +491,9 @@ function getPoolAddressByOptions(options, needLocal = false) {
 }
 
 splpCommand.command('set-default')
-    .option("-a,--address <address>", '借贷池地址')
-    .option("-i,--index <index>", '借贷池ID')
-    .description("设置默认借贷池")
+    .option("-a,--address <address>", i18n.__('Lending-Pool-Address'))
+    .option("-i,--index <index>", i18n.__('lending-pool-id'))
+    .description(i18n.__('set-default-lending-pool'))
     .action(async (options) => {
         let poolAddress
         if (options.address) {
@@ -507,8 +507,8 @@ splpCommand.command('set-default')
     })
 
 splpCommand.command('info')
-    .option("-a,--address <address>", '任意借贷池地址')
-    .option("-i,--index <index>", '借贷池ID')
+    .option("-a,--address <address>", i18n.__('any-lending-pool-address'))
+    .option("-i,--index <index>", i18n.__('lending-pool-id'))
     .description(i18n.__('Lending-Pool-Info'))
     .action(async (options) => {
         let poolAddress = getPoolAddressByOptions(options)['address']
@@ -516,11 +516,11 @@ splpCommand.command('info')
     })
 
 const nodeCommand = splpCommand.command('node')
-    .description("节点操作")
+    .description(i18n.__('node-operation'))
 
 nodeCommand.command('list')
-    .option("-a,--address <address>", '任意借贷池地址')
-    .option("-i,--index <index>", '借贷池ID')
+    .option("-a,--address <address>", i18n.__('any-lending-pool-address'))
+    .option("-i,--index <index>", i18n.__('lending-pool-id'))
     .description(i18n.__('Lending-Pool-Node-List'))
     .action((options) => {
         let poolAddress = getPoolAddressByOptions(options)['address']
@@ -528,8 +528,8 @@ nodeCommand.command('list')
     })
 
 nodeCommand.command('info <nodeId>')
-    .option("-a,--address <address>", '任意借贷池地址')
-    .option("-i,--index <index>", '借贷池ID')
+    .option("-a,--address <address>", i18n.__('any-lending-pool-address'))
+    .option("-i,--index <index>", i18n.__('lending-pool-id'))
     .description(i18n.__('Lending-Pool-Node-Info'))
     .action(async (nodeId, options) => {
         let poolAddress = getPoolAddressByOptions(options)['address']
@@ -538,8 +538,8 @@ nodeCommand.command('info <nodeId>')
     })
 
 nodeCommand.command('sealLoan <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
     .description(i18n.__('Loan-Seal'))
@@ -550,15 +550,15 @@ nodeCommand.command('sealLoan <nodeId>')
         let {address, admin} = getPoolAddressByOptions(options, true)
         let poolAddress = address
         let encryptionKey = await checkWalletIsPassword(admin)
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n发起操作钱包地址: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL`,
             () => {
                 sealLoan(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey)
             }, options.force)
     })
 
 nodeCommand.command('withdrawLoan <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
     .description(i18n.__('Loan-Withdrawal'))
@@ -569,15 +569,15 @@ nodeCommand.command('withdrawLoan <nodeId>')
         let {address, admin} = getPoolAddressByOptions(options, true)
         let poolAddress = address
         let encryptionKey = await checkWalletIsPassword(admin)
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n发起操作钱包地址: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Withdrawal-Amount')}: ${amount} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Withdrawal-Amount')}: ${amount} FIL`,
             () => {
                 withdrawLoan(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey)
             }, options.force)
     })
 
 nodeCommand.command('repay <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
     .description(i18n.__('Repayment'))
@@ -588,15 +588,15 @@ nodeCommand.command('repay <nodeId>')
         let {address, admin} = getPoolAddressByOptions(options, true)
         let poolAddress = address
         let encryptionKey = await checkWalletIsPassword(admin)
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n发起操作钱包地址: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
             () => {
                 repay(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey)
             }, options.force)
     })
 
 nodeCommand.command('withdraw <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
     .description(i18n.__('Withdraw-To-Owner'))
     .action(async (nodeId, options) => {
@@ -607,19 +607,19 @@ nodeCommand.command('withdraw <nodeId>')
         let poolAddress = address
         let encryptionKey = await checkWalletIsPassword(admin)
 
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n发起操作钱包地址: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('withdraw-Amount')}: ${amount} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('withdraw-Amount')}: ${amount} FIL`,
             () => {
                 withdraw(poolAddress, nodeId, amount, admin, encryptionKey)
             }, options.force)
     })
 
 nodeCommand.command('repayWithCash <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .option("-wa,--walletAddress <address>", "钱包地址")
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .option("-wa,--walletAddress <address>", i18n.__('wallet-address'))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
-    .description(i18n.__('Withdraw-To-Owner'))
+    .description(i18n.__('repay-with-cash-dec'))
     .action(async (nodeId, options) => {
         checkNodeId(nodeId)
         let amount = options.amount
@@ -632,20 +632,20 @@ nodeCommand.command('repayWithCash <nodeId>')
         if (options.walletAddress) {
             walletAddress = options.walletAddress
         }
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n发起操作钱包地址: ${walletAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${walletAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
             () => {
                 repayWithCash(poolAddress, nodeId, amount, parseRateMode(options.rateMode), walletAddress, encryptionKey)
             }, options.force)
     })
 
 nodeCommand.command('autoSealLoad <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .requiredOption("-alt,--available-lt <amount>", "当可用余额小于当前值时，执行借款")
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .requiredOption("-alt,--available-lt <amount>", i18n.__('execute-borrowing'))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
-    .option("--init", "未执行init则执行初始化操作")
-    .description('定时自动借款封装，每分钟执行一次，当可用余额小于<available-lt>时，执行借款<amount>')
+    .option("--init", i18n.__('perform-initialization'))
+    .description(i18n.__('scheduled-borrowing'))
     .action(async (nodeId, options) => {
 
         if (options.init) {
@@ -662,20 +662,20 @@ nodeCommand.command('autoSealLoad <nodeId>')
         let {address, admin} = getPoolAddressByOptions(options, true)
         let poolAddress = address
         let encryptionKey = await checkWalletIsPassword(admin)
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL\n触发借款条件: 可用余额小于${options.availableLt} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL\n${i18n.__('borrowing-trigger-condition')}${options.availableLt} FIL`,
             () => {
                 autoSealLoad(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey, options.availableLt)
             }, options.force)
     })
 
 nodeCommand.command('autoRepay <nodeId>')
-    .addOption(new Option("-p,--pool <address>", "借贷池地址"))
-    .requiredOption("-agt,--available-gt <amount>", "当可用余额大于于当前值时，执行还款")
-    .addOption(new Option("-a,--amount <amount>", "数量"))
+    .addOption(new Option("-p,--pool <address>", i18n.__('Lending-Pool-Address')))
+    .requiredOption("-agt,--available-gt <amount>", i18n.__('execute-repayment'))
+    .addOption(new Option("-a,--amount <amount>", i18n.__('quantity')))
     .addOption(new Option('-r,--rateMode <type>', i18n.__('Loan-Type-Stable-Floating')).default("v").choices(["r", "v"]))
-    .option("--init", "未执行init则执行初始化操作")
+    .option("--init", i18n.__('perform-initialization'))
     .option("-f, --force", i18n.__('Enforcement-inquiries'))
-    .description('定时自动还款，每分钟执行一次，当可用余额大于<available-gt>时，执行还款<amount>')
+    .description(i18n.__('scheduled-repayment'))
     .action(async (nodeId, options) => {
 
         if (options.init) {
@@ -692,15 +692,15 @@ nodeCommand.command('autoRepay <nodeId>')
         let {address, admin} = getPoolAddressByOptions(options, true)
         let poolAddress = address
         let encryptionKey = await checkWalletIsPassword(admin)
-        confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL\n触发借款条件: 可用余额大于${options.availableGt} FIL`,
+        confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL\n${i18n.__('repayment-trigger-condition')}${options.availableGt} FIL`,
             () => {
                 autoRepay(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey, options.availableGt)
             }, options.force)
     })
 
 nodeCommand.command('autoAction')
-    .option("--init", "未执行init则执行初始化操作")
-    .description('定时自动操作')
+    .option("--init", i18n.__('perform-initialization'))
+    .description(i18n.__('scheduled-automatic-operation'))
     .action(async (options) => {
 
         if (options.init) {
@@ -712,7 +712,7 @@ nodeCommand.command('autoAction')
         }
 
         let action = await select({
-            message: `请选择您要的操作`,
+            message: i18n.__('select-operation'),
             choices: [
                 {
                     name: `autoSealLoad`,
@@ -726,35 +726,35 @@ nodeCommand.command('autoAction')
         })
 
         let nodeId = await input({
-            message: `请输入节点ID`,
+            message: i18n.__('enter-node-id'),
             validate: (_nodeId) => {
                 return _nodeId.startsWith('f0')
             }
         })
 
         let rateMode = await select({
-            message: `请选择${action === 'autoSealLoad' ? '借款' : '还款'}利率模式`,
+            message: action === 'autoSealLoad' ? i18n.__('select-borrowing-rate-mode') : i18n.__('select-repayment-rate-mode') ,
             choices: [
                 {
-                    name: `浮动利率`,
+                    name: i18n.__('Variable-Interest-Rate'),
                     value: "v"
                 },
                 {
-                    name: `稳定利率`,
+                    name: i18n.__('Stable-Interest-Rate'),
                     value: "r"
                 }
             ]
         })
 
         let available = await input({
-            message: `请输入触发金额，当可用余额${action === 'autoSealLoad' ? '小于' : '大于'}该金额时触发`,
+            message:  action === 'autoSealLoad' ? i18n.__('enter-trigger-amount') : i18n.__('enter-trigger-amount-gt'),
             validate: (_amount) => {
                 return !isNaN(_amount)
             }
         })
 
         let amount = await input({
-            message: `请输入${action === 'autoSealLoad' ? '借款' : '还款'}金额`,
+            message: action === 'autoSealLoad' ? i18n.__('enter-borrowing-amount') : i18n.__('enter-repayment-amount'),
             validate: (_amount) => {
                 return !isNaN(_amount)
             }
@@ -766,13 +766,13 @@ nodeCommand.command('autoAction')
 
         switch (action) {
             case "autoRepay":
-                confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL\n触发借款条件: 可用余额大于${available} FIL`,
+                confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL\n${i18n.__('repayment-trigger-condition')}${available} FIL`,
                     () => {
                         autoRepay(poolAddress, nodeId, amount, parseRateMode(rateMode), admin, encryptionKey, available)
                     }, options.force)
                 break
             case "autoSealLoad":
-                confirmationOperation(`${i18n.__('Is-this-the-operation-you-want')}\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL\n触发借款条件: 可用余额小于${available} FIL`,
+                confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL\n${i18n.__('borrowing-trigger-condition')}${available} FIL`,
                     () => {
                         autoSealLoad(poolAddress, nodeId, amount, parseRateMode(rateMode), admin, encryptionKey, available)
                     }, options.force)

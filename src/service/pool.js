@@ -46,7 +46,7 @@ async function setDefault(poolAddress) {
     let splp = getConfigSplp()
     let index = splp.findIndex(item => item['address'].toString().toLowerCase() === poolAddress.toString().toLowerCase())
     if (index < 0) {
-        console.error(`Error: 该借贷池不存在`)
+        console.error(`Error: ${i18n.__('lending-pool-not-exist')}`)
         return
     }
 
@@ -66,7 +66,7 @@ async function addPool(poolAddress) {
 
     let splp = getConfigSplp()
     if (splp.findIndex(item => item['address'].toString().toLowerCase() === poolAddress.toString().toLowerCase()) >= 0) {
-        console.error(`Error: 该借贷池已存在`)
+        console.error(`Error: ${i18n.__('lending-pool-exists')}`)
         return
     }
 
@@ -74,7 +74,7 @@ async function addPool(poolAddress) {
     let addressList = walletList.map(item => item['address'].toString().toLowerCase())
     let poolAdmin = await getPoolAdmin(poolAddress)
     if (addressList.indexOf(poolAdmin.toString().toLowerCase()) < 0) {
-        console.error(`Error: 该借贷池的管理员不存在你的钱包地址`)
+        console.error(`Error: ${i18n.__('lending-pool-admin-not-in-your-wallet')}`)
         return
     }
     splp.push({

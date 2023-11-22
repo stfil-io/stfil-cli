@@ -145,7 +145,7 @@ async function autoSealLoad(poolAddress, nodeId, amount, rateMode, walletAddress
 
 async function _autoSealLoad(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableLt) {
     let now = new Date();
-    console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 等待下一轮监听...`)
+    console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('wait-next-round')}...`)
     setTimeout(async () => {
         let stateReadState = await filecoinProvider.readState(nodeId)
         let {Balance} = stateReadState
@@ -154,7 +154,7 @@ async function _autoSealLoad(filecoinProvider, poolAddress, nodeId, amount, rate
 
         if (availableBalance < shortToLong(availableLt)) {
             let now = new Date();
-            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 可用余额小于${availableLt}FIL，准备借款${amount}FIL`)
+            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('prepare-borrowing-under-10FIL').replace('xxx',availableGt).replace('kkk', amount)}`)
             await sealLoan(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey)
         }
         _autoSealLoad(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableLt)
@@ -169,7 +169,7 @@ async function autoRepay(poolAddress, nodeId, amount, rateMode, walletAddress, e
 
 async function _autoRepay(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableGt) {
     let now = new Date();
-    console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 等待下一轮监听...`)
+    console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('wait-next-round')}...`)
     setTimeout(async () => {
         let stateReadState = await filecoinProvider.readState(nodeId)
         let {Balance} = stateReadState
@@ -178,7 +178,7 @@ async function _autoRepay(filecoinProvider, poolAddress, nodeId, amount, rateMod
 
         if (availableBalance > shortToLong(availableGt)) {
             let now = new Date();
-            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 可用余额大于${availableGt}FIL，准备还款${amount}FIL`)
+            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('prepare-borrowing-over-10FIL').replace('xxx',availableGt).replace('kkk', amount)}`)
             await sealLoan(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey)
         }
         _autoRepay(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableGt)

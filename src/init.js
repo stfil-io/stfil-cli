@@ -64,7 +64,7 @@ function getPrivateKey(walletAddress, encryptionKey) {
         }
         return decrypt(wallet['privateKey'], encryptionKey)
     } catch (e) {
-        console.error('Error: 私钥加密密码错误！')
+        console.error(`Error: ${i18n.__('private-key-password-error')}`)
         process.exit(1);
     }
 }
@@ -105,7 +105,7 @@ function getConfigWallet(address) {
     }
     let findIndex = walletList.findIndex(item => item['address'].toString().toLowerCase() === address.toString().toLowerCase());
     if (findIndex < 0) {
-        console.error(`Error: 钱包暂未添加，请手动添加钱包\nstfil-cli wallet add`)
+        console.error(`Error: ${i18n.__('wallet-not-added')}\nstfil-cli wallet add`)
         process.exit(1)
     }
 
@@ -147,7 +147,7 @@ function getSplp(index) {
     if (index !== undefined) {
         index = parseInt(index)
         if (index >= splp.length) {
-            console.log(`Error: 借贷池序列号最大为${splp.length - 1}`)
+            console.log(`Error: ${i18n.__('max-lending-pool-serial-number')}${splp.length - 1}`)
             process.exit(1)
         }
         return splp[index]
@@ -155,7 +155,7 @@ function getSplp(index) {
     index = splp.findIndex(item => item['default'])
     if (index < 0) {
         if (splp.length === 0) {
-            console.error("Error: 请添加借贷池\n stfil-cli splp add")
+            console.error(`Error: ${i18n.__('p-add-lending-pool')}\n stfil-cli splp add`)
             process.exit(1)
         }
         return splp[0]

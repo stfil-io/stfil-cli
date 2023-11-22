@@ -6,6 +6,7 @@ const {getSTFILTokenContractAddress} = require("../init");
 const {getProvider} = require("../contract/operation");
 const {getRpc} = require("../init");
 const STFILToken = require('../contract/abi/STFILToken.json')
+const i18n = require("../i18n/i18n-config");
 const {SK} = require("../utils/common");
 const {encrypt} = require("../utils/common");
 const {getWallet} = require("../contract/operation");
@@ -41,7 +42,7 @@ async function walletList() {
 async function addWallet(isPassword, encryptionKey, privateKey, address) {
     let walletList = getConfigWallet();
     if (walletList.findIndex(item => item['address'].toString().toLowerCase() === address.toString().toLowerCase()) >= 0) {
-        console.error(`Error: 该钱包已存在`)
+        console.error(`Error: ${i18n.__('wallet-exists')}`)
         return
     }
     walletList.push({
@@ -59,7 +60,7 @@ async function delWallet(address) {
     let walletList = getConfigWallet();
     let index = walletList.findIndex(item => item['address'].toString().toLowerCase() === address.toString().toLowerCase())
     if (index < 0) {
-        console.error(`Error: 该钱包不存在`)
+        console.error(`Error: ${i18n.__('wallet-not-exist')}`)
         return
     }
 
