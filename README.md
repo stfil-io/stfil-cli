@@ -113,7 +113,7 @@ docker run -it stfil-cli
 ```
 When running with docker, you need to complete the initialization operations
 
-When running with docker, you need to complete the initialization operation, and when the container is ready, exit the container command line using 
+and when the container is ready, exit the container command line using 
 ```sh
 Ctrl + P followed by  Ctrl + Q
 ```
