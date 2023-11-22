@@ -50,7 +50,7 @@ let logo = figlet.textSync('STFIL CLI', {
 program
     .name('stfil-cli')
     .description(logo + '\nSTFIL Contract Execution Tool')
-    .version('1.1.1')
+    .version('1.2.0')
 
 const passwordRegex = /^[A-Za-z0-9!@#$%^&*(),.?":{}|<>]{8,20}$/;
 
@@ -700,6 +700,7 @@ nodeCommand.command('autoRepay <nodeId>')
 
 nodeCommand.command('autoAction')
     .option("--init", "未执行init则执行初始化操作")
+    .description('定时自动操作')
     .action(async (options) => {
 
         if (options.init) {
