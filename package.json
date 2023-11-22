@@ -3,7 +3,7 @@
   "name": "@stfil/stfil-cli",
   "version": "1.2.0",
   "description": "STFIL Contract Execution Tool",
-  "main": "index.js",
+  "main": "./stfil-cli.js",
   "scripts": {},
   "bin": {
     "stfil-cli": "./stfil-cli.js"
