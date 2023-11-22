@@ -114,9 +114,9 @@ docker run -it stfil-cli
 When running with docker, you need to complete the initialization operations
 
 and when the container is ready, exit the container command line using 
-```sh
-Ctrl + P followed by  Ctrl + Q
-```
+
+`Ctrl + P` followed by  `Ctrl + Q`
+
 The container restart operation needs to be reparameterized, using the following command
 
 ```sh
@@ -124,9 +124,7 @@ docker start -i <CONTAINER ID>
 ```
 
 Use this command to exit the container
-```sh
-Ctrl + P followed by  Ctrl + Q
-```
+`Ctrl + P` followed by  `Ctrl + Q`
 
 ## Author
 
