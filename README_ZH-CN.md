@@ -19,7 +19,7 @@ npm link
 stfil-cli -h
 ```
 
-## 直接使用
+## 或直接使用
 
 ```sh
 npm i @stfil/stfil-cli -g
