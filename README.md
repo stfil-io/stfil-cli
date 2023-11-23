@@ -1,6 +1,7 @@
 # Welcome to stfil-cli 👋
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?cacheSeconds=2592000)
+![Version](https://img.shields.io/badge/version-1.2.1-blue.svg?cacheSeconds=2592000)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![Node Version](https://img.shields.io/badge/node->=16.0.0-brightgreen)
 
 > STFIL Contract Execution Tool
 
