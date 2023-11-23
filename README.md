@@ -5,6 +5,8 @@
 
 > STFIL Contract Execution Tool
 
+Read this in other languages: English | [简体中文](./README_ZH-CN.md)
+
 ### 🏠 [Homepage](https://stfil.io)
 
 ## Local Installation
