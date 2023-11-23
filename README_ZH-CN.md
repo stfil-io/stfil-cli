@@ -64,6 +64,14 @@ stfil-cli splp add 0xc5A520f9Ea2DB52805f570741B1E869E07f308d4
 stfil-cli splp list
 ```
 
+### 设置默认借贷池
+
+当存在多个借贷池时设置默认，之后节点的操作默认都使用该借贷池，也可以通过 `-p <poolAddress>` 来手动指定。
+
+```sh
+stfil-cli splp set-default
+```
+
 ### 借贷池信息
 ```sh
 stfil-cli splp info
@@ -75,7 +83,7 @@ stfil-cli splp node info f041395
 ```
 
 ### 借款封装操作
-浮动利率借款封装 10FIL -- 通过 `-r v` , 或者默认浮动利率
+浮动利率借款封装 10FIL -- 通过 `-r v` , 或者默认浮动利率，不指定借贷池则使用默认借贷池。
 ```sh
 stfil-cli splp node sealLoan -r v -a 10 f041395 
 ```
