@@ -131,6 +131,4 @@ Use this command to exit the container
 
 ## Author
 
-👤 **STFIL <info@stfil.io>**
-
 * Twitter: [@stfil\_io](https://twitter.com/stfil\_io)
