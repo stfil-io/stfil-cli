@@ -122,11 +122,19 @@ stfil-cli splp node autoRepay -agt 100 -a 100 f041395
 使用docker的方式，主要用于定时自动操作，详情查看 `Dockerfile` 文件。执行 `stfil-cli splp node autoAction --init` 命令。该命令使用交互式引导用户执行“自动借款封装”或“自动还款”功能。
 
 ```sh
+docker pull stfil/stfil-cli
+docker run -it stfil-cli
+```
+
+或者本地打包
+
+```sh
 git clone https://github.com/stfil-io/stfil-cli.git
 cd stfil-cli
 docker build -t stfil-cli .
 docker run -it stfil-cli
 ```
+
 
 当使用docker运行时，需要在启动容器的时候完成初始化操作，导入钱包，地址，选项等
 
