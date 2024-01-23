@@ -109,7 +109,7 @@
   "borrowing-trigger-condition": "Borrowing trigger condition: Available balance less than",
   "execute-repayment": "Execute repayment when available balance is greater than the current value",
   "scheduled-repayment": "Automated repayment scheduled, executes every minute when available balance is greater than <available-gt>, repay <amount>",
-  "repayment-trigger-condition": "Repayment trigger condition: Available balance greater than",
+  "repayment-trigger-condition": "Trigger condition: Available balance greater than",
   "scheduled-automatic-operation": "Scheduled automatic operation",
   "select-operation": "Please select the operation you want",
   "enter-node-id": "Please enter the node ID",
@@ -128,8 +128,9 @@
   "lending-pool-admin-not-in-your-wallet": "The administrator of this lending pool does not exist in your wallet address",
   "wait-next-round": "Wait for the next round of listening",
   "prepare-borrowing-under-10FIL": "Available balance less than xxxFIL, preparing to borrow kkkFIL",
-  "prepare-borrowing-over-10FIL": "Available balance greater than xxxFIL, preparing to borrow kkkFIL",
+  "prepare-borrowing-over-10FIL": "Available balance greater than xxxFIL, preparing to repay kkkFIL",
   "wallet-not-exist": "This wallet does not exist",
   "wallet-exists": "This wallet already exists",
-  "repay-with-cash-dec": "Repayment through the wallet, prioritizing the repayment of \"Loan Withdrawal\""
+  "repay-with-cash-dec": "Repayment through the wallet, prioritizing the repayment of \"Loan Withdrawal\"",
+  "borrowing-condition-no": "Current loan conditions not met: available loan is less than 10FIL"
 }

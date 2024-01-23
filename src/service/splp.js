@@ -1,4 +1,4 @@
-const {getContract} = require("../contract/operation");
+const {getContract, getProvider} = require("../contract/operation");
 const {getRpc, getLang} = require("../init");
 const {getPrivateKey} = require("../init");
 const {getWallet} = require("../contract/operation");
@@ -9,7 +9,7 @@ const {contractParseCode} = require("../utils/common");
 const {getContractAddress} = require("../init");
 const ErrCode = require('../utils/ErrCode')
 const ErrCodeCH = require('../utils/ErrCodeCH')
-const {shortToLong} = require("../utils/Price");
+const {shortToLong, longToShort} = require("../utils/Price");
 const i18n = require('../i18n/i18n-config');
 const CLI = require('clui'), Spinner = CLI.Spinner;
 const {getFilecoinProvider} = require("../contract/operation");
@@ -65,9 +65,9 @@ async function sealLoan(poolAddress, nodeId, amount, rateMode, walletAddress, en
     try {
         let tx
         if (!poolAddress) {
-            tx = await _stakingPoolContract(walletAddress, encryptionKey).borrow(nodeId.substr(2), shortToLong(amount), rateMode)
+            tx = await _stakingPoolContract(walletAddress, encryptionKey).borrow(nodeId.substr(2), amount, rateMode)
         } else {
-            tx = await _getPoolContract(poolAddress, walletAddress, encryptionKey).sealLoan(nodeId.substr(2), shortToLong(amount), rateMode)
+            tx = await _getPoolContract(poolAddress, walletAddress, encryptionKey).sealLoan(nodeId.substr(2), amount, rateMode)
         }
         await waitTx(tx)
     } catch (e) {
@@ -82,7 +82,7 @@ async function withdrawLoan(poolAddress, nodeId, amount, rateMode, walletAddress
     let poolContract = _getPoolContract(poolAddress, walletAddress, encryptionKey);
 
     try {
-        let tx = await poolContract.withdrawLoan(nodeId.substr(2), shortToLong(amount), rateMode)
+        let tx = await poolContract.withdrawLoan(nodeId.substr(2), amount, rateMode)
         await waitTx(tx)
     } catch (e) {
         countdown.stop()
@@ -100,7 +100,7 @@ async function repay(poolAddress, nodeId, amount, rateMode, walletAddress, encry
     }
 
     try {
-        let tx = await contract.repay(nodeId.substr(2), shortToLong(amount), rateMode)
+        let tx = await contract.repay(nodeId.substr(2), amount, rateMode)
         await waitTx(tx)
     } catch (e) {
         parseError(e)
@@ -112,7 +112,7 @@ async function repayWithCash(poolAddress, nodeId, amount, rateMode, walletAddres
 
     let contract = _getPoolContract(poolAddress, walletAddress, encryptionKey)
     try {
-        let tx = await contract.repayWithCash(nodeId.substr(2), rateMode, {value: shortToLong(amount)})
+        let tx = await contract.repayWithCash(nodeId.substr(2), rateMode, {value: amount})
         await waitTx(tx)
     } catch (e) {
         parseError(e)
@@ -135,7 +135,20 @@ async function withdraw(poolAddress, nodeId, amount, walletAddress, encryptionKe
     }
 }
 
-const SLEEP_TIME = 60000
+const SLEEP_TIME = 6000
+const MIN_DIFF = shortToLong('5')
+
+async function leftAvailableBorrowingAmount(poolAddress, walletAddress, encryptionKey) {
+    const lendingPool = _getPoolContract(poolAddress, walletAddress, encryptionKey)
+    const stakingPoolContract = _stakingPoolContract(walletAddress, encryptionKey)
+    const maxBorrowableLiquidityAmount = await stakingPoolContract.maxBorrowableLiquidityAmount()
+    const lendingPoolMaxSealedLoadAmount = await lendingPool.maxSealedLoadAmount()
+    const min = maxBorrowableLiquidityAmount > lendingPoolMaxSealedLoadAmount ? lendingPoolMaxSealedLoadAmount : maxBorrowableLiquidityAmount
+    if (min > MIN_DIFF) {
+        return min - MIN_DIFF
+    }
+    return min
+}
 
 async function autoSealLoad(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableLt) {
     let rpc = getRpc()
@@ -154,8 +167,18 @@ async function _autoSealLoad(filecoinProvider, poolAddress, nodeId, amount, rate
 
         if (availableBalance < shortToLong(availableLt)) {
             let now = new Date();
-            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('prepare-borrowing-under-10FIL').replace('xxx',availableGt).replace('kkk', amount)}`)
-            await sealLoan(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey)
+
+            const leftBorrowingAmount = await leftAvailableBorrowingAmount(poolAddress, walletAddress, encryptionKey)
+            if (leftBorrowingAmount < amount) {
+                amount = leftBorrowingAmount
+            }
+
+            if (amount < shortToLong('10')) {
+                console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('borrowing-condition-no')}`)
+            } else {
+                console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('prepare-borrowing-under-10FIL').replace('xxx', availableLt).replace('kkk', longToShort(amount, 2))}`)
+                await sealLoan(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey)
+            }
         }
         _autoSealLoad(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableLt)
     }, SLEEP_TIME)
@@ -168,6 +191,7 @@ async function autoRepay(poolAddress, nodeId, amount, rateMode, walletAddress, e
 }
 
 async function _autoRepay(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableGt) {
+
     let now = new Date();
     console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('wait-next-round')}...`)
     setTimeout(async () => {
@@ -178,20 +202,13 @@ async function _autoRepay(filecoinProvider, poolAddress, nodeId, amount, rateMod
 
         if (availableBalance > shortToLong(availableGt)) {
             let now = new Date();
-            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('prepare-borrowing-over-10FIL').replace('xxx',availableGt).replace('kkk', amount)}`)
-            await sealLoan(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey)
+            console.log(`【${now.toLocaleDateString()} ${now.toLocaleTimeString()}】 ${i18n.__('prepare-borrowing-over-10FIL').replace('xxx', availableGt).replace('kkk', longToShort(amount, 2))}`)
+            await repay(poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey)
         }
         _autoRepay(filecoinProvider, poolAddress, nodeId, amount, rateMode, walletAddress, encryptionKey, availableGt)
     }, SLEEP_TIME)
 }
 
 module.exports = {
-    sealLoan,
-    repay,
-    withdraw,
-    withdrawLoan,
-    parseRateMode,
-    repayWithCash,
-    autoSealLoad,
-    autoRepay
+    sealLoan, repay, withdraw, withdrawLoan, parseRateMode, repayWithCash, autoSealLoad, autoRepay
 }

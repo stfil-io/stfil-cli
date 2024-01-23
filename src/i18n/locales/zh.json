@@ -107,7 +107,7 @@
 	"borrowing-trigger-condition": "触发借款条件: 可用余额小于",
 	"execute-repayment": "当可用余额大于于当前值时，执行还款",
 	"scheduled-repayment": "定时自动还款，每分钟执行一次，当可用余额大于<available-gt>时，执行还款<amount>",
-	"repayment-trigger-condition": "触发借款条件: 可用余额大于",
+	"repayment-trigger-condition": "触发条件: 可用余额大于",
 	"scheduled-automatic-operation": "定时自动操作",
 	"select-operation": "请选择您要的操作",
 	"enter-node-id": "请输入节点ID",
@@ -126,8 +126,9 @@
 	"lending-pool-admin-not-in-your-wallet": "该借贷池的管理员不存在你的钱包地址",
 	"wait-next-round": "等待下一轮监听",
 	"prepare-borrowing-under-10FIL": "可用余额小于 xxxFIL，准备借款 kkkFIL",
-	"prepare-borrowing-over-10FIL": "可用余额大于 xxxFIL，准备借款 kkkFIL",
+	"prepare-borrowing-over-10FIL": "可用余额大于 xxxFIL，准备还款 kkkFIL",
 	"wallet-not-exist": "该钱包不存在",
 	"wallet-exists": "该钱包已存在",
-	"repay-with-cash-dec": "通过钱包还款，优先还款“借款提现”"
+	"repay-with-cash-dec": "通过钱包还款，优先还款“借款提现”",
+	"borrowing-condition-no": "当前不满足借款条件：可用借款不足10FIL"
 }

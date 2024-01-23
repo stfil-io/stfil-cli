@@ -40,6 +40,7 @@ const {getConfigWallet} = require("./src/init");
 const {input} = require("@inquirer/prompts");
 const {isPassword} = require("./src/init");
 const {exec} = require('child_process');
+const {shortToLong} = require("./src/utils/Price");
 
 init()
 
@@ -552,7 +553,7 @@ nodeCommand.command('sealLoan <nodeId>')
         let encryptionKey = await checkWalletIsPassword(admin)
         confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL`,
             () => {
-                sealLoan(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey)
+                sealLoan(poolAddress, nodeId, shortToLong(amount), parseRateMode(options.rateMode), admin, encryptionKey)
             }, options.force)
     })
 
@@ -571,7 +572,7 @@ nodeCommand.command('withdrawLoan <nodeId>')
         let encryptionKey = await checkWalletIsPassword(admin)
         confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Withdrawal-Amount')}: ${amount} FIL`,
             () => {
-                withdrawLoan(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey)
+                withdrawLoan(poolAddress, nodeId, shortToLong(amount), parseRateMode(options.rateMode), admin, encryptionKey)
             }, options.force)
     })
 
@@ -590,7 +591,7 @@ nodeCommand.command('repay <nodeId>')
         let encryptionKey = await checkWalletIsPassword(admin)
         confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${admin}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
             () => {
-                repay(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey)
+                repay(poolAddress, nodeId, shortToLong(amount), parseRateMode(options.rateMode), admin, encryptionKey)
             }, options.force)
     })
 
@@ -634,7 +635,7 @@ nodeCommand.command('repayWithCash <nodeId>')
         }
         confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('initiating-wallet-address')}: ${walletAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL`,
             () => {
-                repayWithCash(poolAddress, nodeId, amount, parseRateMode(options.rateMode), walletAddress, encryptionKey)
+                repayWithCash(poolAddress, nodeId, shortToLong(amount), parseRateMode(options.rateMode), walletAddress, encryptionKey)
             }, options.force)
     })
 
@@ -664,7 +665,7 @@ nodeCommand.command('autoSealLoad <nodeId>')
         let encryptionKey = await checkWalletIsPassword(admin)
         confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Loan-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('Loan-Seal-Amount')}: ${amount} FIL\n${i18n.__('borrowing-trigger-condition')}${options.availableLt} FIL`,
             () => {
-                autoSealLoad(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey, options.availableLt)
+                autoSealLoad(poolAddress, nodeId, shortToLong(amount), parseRateMode(options.rateMode), admin, encryptionKey, options.availableLt)
             }, options.force)
     })
 
@@ -694,7 +695,7 @@ nodeCommand.command('autoRepay <nodeId>')
         let encryptionKey = await checkWalletIsPassword(admin)
         confirmationOperation(`----------------${i18n.__('Is-this-the-operation-you-want')}-----------------\n${i18n.__('Lending-Pool-Address')}: ${poolAddress}\n${i18n.__('Node-ID')} ${nodeId} \n${i18n.__('Repay-Type')}: ${options.rateMode.toString() === 'r' ? i18n.__('Stable-Interest-Rate') : i18n.__('Variable-Interest-Rate')}\n${i18n.__('repay-Amount')}: ${amount} FIL\n${i18n.__('repayment-trigger-condition')}${options.availableGt} FIL`,
             () => {
-                autoRepay(poolAddress, nodeId, amount, parseRateMode(options.rateMode), admin, encryptionKey, options.availableGt)
+                autoRepay(poolAddress, nodeId, shortToLong(amount), parseRateMode(options.rateMode), admin, encryptionKey, options.availableGt)
             }, options.force)
     })
 
