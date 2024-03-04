@@ -16,6 +16,9 @@
   "keywords": [
     "STFIL"
   ],
+  "pkg": {
+    "assets": "./node_modules/figlet/fonts/*.flf"
+  },
   "author": "STFIL <contacts@stfil.io>",
   "license": "(Apache-2.0 AND MIT)",
   "dependencies": {

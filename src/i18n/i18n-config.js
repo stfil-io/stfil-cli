@@ -2,7 +2,7 @@ const i18n = require('i18n');
 
 i18n.configure({
     locales: ['en', 'zh'],
-    directory: __dirname + '/locales',
+    directory: process.cwd() + '/locales',
     defaultLocale: 'en',
     objectNotation: true
 });
